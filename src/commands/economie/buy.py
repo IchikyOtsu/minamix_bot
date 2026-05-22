@@ -74,7 +74,7 @@ async def register(bot):
             embed = Embed(
                 title="✅ Achat réussi !",
                 description=(
-                    f"Tu as acheté **{nom_role}** pour **{prix}💰**.\n"
+                    f"Tu as acheté <@&{role_id}> pour **{prix}💰**.\n"
                     "Le rôle t'a été attribué avec succès."
                 ),
                 color=discord.Color.green()
@@ -83,7 +83,7 @@ async def register(bot):
             embed = Embed(
                 title="✅ Achat réussi !",
                 description=(
-                    f"Tu as acheté **{nom_role}** pour **{prix}💰**.\n\n"
+                    f"Tu as acheté <@&{role_id}> pour **{prix}💰**.\n\n"
                     "⚠️ *Impossible d'attribuer le rôle automatiquement. Contacte un admin.*"
                 ),
                 color=discord.Color.orange()
