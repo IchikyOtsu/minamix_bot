@@ -1,10 +1,13 @@
-# src/utils/wallet.py
 import pymysql
 
-async def modify_user_balance(db: pymysql.connections.Connection, user_id: int, amount: int, operation: str = "add") -> int:
 
+async def modify_user_balance(
+    db: pymysql.connections.Connection,
+    user_id: int,
+    amount: int,
+    operation: str = "add",
+) -> int:
     with db.cursor() as cursor:
-
         cursor.execute("SELECT balance FROM wallets WHERE user_id = %s", (user_id,))
         result = cursor.fetchone()
         if not result:
@@ -21,9 +24,8 @@ async def modify_user_balance(db: pymysql.connections.Connection, user_id: int, 
         elif operation == "set":
             new_balance = amount
         else:
-            raise ValueError(f"Opération inconnue: {operation}")
+            raise ValueError(f"Opération inconnue : {operation}")
 
         cursor.execute("UPDATE wallets SET balance = %s WHERE user_id = %s", (new_balance, user_id))
         db.commit()
-
         return new_balance

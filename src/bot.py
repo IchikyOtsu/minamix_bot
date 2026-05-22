@@ -1,21 +1,20 @@
 import os
-import sys
 import asyncio
 from dotenv import load_dotenv
 import pymysql
 import discord
 from discord.ext import commands
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from src.config import GUILD_IDS
+from src.core.db_init import init_db
+from src.core.loader import load_modules
 
-from src.fonction.load_sql import load_sql_files
-from src.fonction.load_commands import load_commands
-from src.fonction.load_events import load_events
 
 def run_bot():
-    asyncio.run(_main_async())
+    asyncio.run(_main())
 
-async def _main_async():
+
+async def _main():
     load_dotenv()
 
     db = pymysql.connect(
@@ -25,10 +24,9 @@ async def _main_async():
         database=os.getenv("DB_NAME"),
         port=int(os.getenv("DB_PORT", 3306)),
         charset="utf8mb4",
-        autocommit=True
+        autocommit=True,
     )
-
-    load_sql_files(db)
+    init_db(db)
 
     token = os.getenv("DISCORD_TOKEN")
     if not token:
@@ -38,34 +36,28 @@ async def _main_async():
     intents.message_content = True
     bot = commands.Bot(command_prefix="!", intents=intents)
 
-    GUILD_IDS = [
-        1437105431741730860,
-        1482529716463210506,
-    ]
-
     @bot.event
     async def on_ready():
-        print(f"Bot connecté : {bot.user}")
+        print(f"Connecté : {bot.user}")
         try:
             for guild_id in GUILD_IDS:
                 guild = discord.Object(id=guild_id)
                 bot.tree.copy_global_to(guild=guild)
                 synced = await bot.tree.sync(guild=guild)
-                print(f"[SYNC] {len(synced)} commandes synchronisées sur le serveur {guild_id}")
-
-            # Vider les commandes globales sur Discord APRES la copie
+                print(f"[SYNC] {len(synced)} commandes → {guild_id}")
             bot.tree.clear_commands(guild=None)
             await bot.tree.sync()
         except Exception as e:
-            print("Erreur sync:", e)
+            print(f"[ERREUR SYNC] {e}")
 
-    await load_events(bot)
-    await load_commands(bot)
+    await load_modules(bot, "src/events", "EVENT")
+    await load_modules(bot, "src/commands", "CMD")
 
     try:
         await bot.start(token)
     except KeyboardInterrupt:
         await bot.close()
+
 
 if __name__ == "__main__":
     run_bot()
