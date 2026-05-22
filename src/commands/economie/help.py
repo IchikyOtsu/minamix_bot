@@ -15,7 +15,8 @@ async def register(bot):
                 "`/balance` — Voir votre solde\n"
                 "`/work` — Gagner des coins (cooldown : 1 semaine)\n"
                 "`/shop` — Voir les rôles disponibles à l'achat\n"
-                "`/buy [numéro]` — Acheter un rôle (liste déroulante si numéro omis)"
+                "`/buy [numéro]` — Acheter un rôle (liste déroulante si numéro omis)\n"
+                "`/leaderboard` — Top 10 des utilisateurs les plus riches"
             ),
             inline=False
         )
