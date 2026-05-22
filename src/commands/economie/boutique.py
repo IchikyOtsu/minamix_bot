@@ -1,5 +1,4 @@
 from discord import Interaction, Embed
-from discord import app_commands
 import discord
 from src.utils.db import get_db_connection
 
@@ -9,12 +8,11 @@ async def register(bot):
         description="Affiche la boutique des rôles disponibles."
     )
     async def boutique(interaction: Interaction):
-
         db = get_db_connection()
         cursor = db.cursor()
-
-        cursor.execute("SELECT role_id, prix, nom, description FROM boutique_roles")
+        cursor.execute("SELECT id, role_id, prix, nom, description FROM boutique_roles")
         items = cursor.fetchall()
+        db.close()
 
         if not items:
             embed = discord.Embed(
@@ -23,25 +21,22 @@ async def register(bot):
                 color=discord.Color.orange()
             )
             embed.set_footer(text="Système d'économie")
-            
-            # Message visible par tout le monde
-            await interaction.response.send_message(embed=embed, ephemeral=False)
-            db.close()
+            await interaction.response.send_message(embed=embed)
             return
 
         embed = Embed(
             title="🛍️ Boutique des rôles",
-            description="Voici les rôles que tu peux acheter !",
+            description="Utilise `/buy <numéro>` pour acheter un rôle.",
             color=0x00FFAA
         )
 
-        for role_id, prix, nom, description in items:
+        for item_id, role_id, prix, nom, description in items:
             desc = description if description else "Aucune description."
             embed.add_field(
-                name=f"🎭 {nom} — {prix}💰",
-                value=f"**ID du rôle :** `{role_id}`\n{desc}",
+                name=f"#{item_id} — {nom} — {prix}💰",
+                value=f"<@&{role_id}>\n{desc}",
                 inline=False
             )
 
-        await interaction.response.send_message(embed=embed, ephemeral=False)
-        db.close()
+        embed.set_footer(text="Système d'économie")
+        await interaction.response.send_message(embed=embed)
