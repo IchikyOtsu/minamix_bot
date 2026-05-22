@@ -47,15 +47,19 @@ async def _main_async():
     async def on_ready():
         print(f"Bot connecté : {bot.user}")
         try:
+            # Vider les commandes globales sur Discord
+            bot.tree.clear_commands(guild=None)
+            await bot.tree.sync()
+
             for guild_id in GUILD_IDS:
                 guild = discord.Object(id=guild_id)
+                # Vider les commandes du serveur sur Discord
+                bot.tree.clear_commands(guild=guild)
+                await bot.tree.sync(guild=guild)
+                # Re-sync proprement
                 bot.tree.copy_global_to(guild=guild)
                 synced = await bot.tree.sync(guild=guild)
                 print(f"[SYNC] {len(synced)} commandes synchronisées sur le serveur {guild_id}")
-
-            # Vider les commandes globales pour éviter les doublons
-            bot.tree.clear_commands(guild=None)
-            await bot.tree.sync()
         except Exception as e:
             print("Erreur sync:", e)
 
