@@ -1,6 +1,7 @@
 from discord import Interaction, Embed
 from src.utils.db import get_db_connection
 from src.utils.wallet import modify_user_balance
+from src.utils.format import format_amount
 import random
 import time
 import discord
@@ -107,7 +108,7 @@ async def register(bot):
 
         embed = Embed(
             title="💼 Travail terminé !",
-            description=f"Tu as gagné **{gain}💰** !\n\n**😄 Blague du jour :**\n_{joke}_\n\n📊 Nouveau solde : **{new_balance}💰**",
+            description=f"Tu as gagné **{format_amount(gain)}💰** !\n\n**😄 Blague du jour :**\n_{joke}_\n\n📊 Nouveau solde : **{format_amount(new_balance)}💰**",
             color=discord.Color.green()
         )
         embed.set_footer(text="Prochain travail possible dans 1 semaine")

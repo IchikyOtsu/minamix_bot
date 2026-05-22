@@ -1,6 +1,7 @@
 from discord import Interaction, Embed
 import discord
 from src.utils.db import get_db_connection
+from src.utils.format import format_amount
 
 
 async def register(bot):
@@ -22,7 +23,7 @@ async def register(bot):
         lines = []
         for rank, (user_id, balance) in enumerate(rows, start=1):
             prefix = medals.get(rank, f"`#{rank}`")
-            lines.append(f"{prefix} <@{user_id}> — **{balance}💰**")
+            lines.append(f"{prefix} <@{user_id}> — **{format_amount(balance)}💰**")
 
         embed = Embed(
             title="🏆 Leaderboard",

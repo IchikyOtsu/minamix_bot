@@ -4,6 +4,7 @@ from discord.ui import Select, View
 from src.utils.db import get_db_connection
 from src.utils.balance import get_user_balance
 from src.utils.wallet import modify_user_balance
+from src.utils.format import format_amount
 
 
 async def _process_purchase(interaction: Interaction, item_id: int):
@@ -26,7 +27,7 @@ async def _process_purchase(interaction: Interaction, item_id: int):
     if current_balance < prix:
         embed = Embed(
             title="❌ Solde insuffisant",
-            description=f"Tu as **{current_balance}💰** mais cet article coûte **{prix}💰**.",
+            description=f"Tu as **{format_amount(current_balance)}💰** mais cet article coûte **{format_amount(prix)}💰**.",
             color=discord.Color.red()
         )
         embed.set_footer(text="Système d'économie")
@@ -52,13 +53,13 @@ async def _process_purchase(interaction: Interaction, item_id: int):
     if role_added:
         embed = Embed(
             title="✅ Achat réussi !",
-            description=f"Tu as acheté <@&{role_id}> pour **{prix}💰**.\nLe rôle t'a été attribué avec succès.",
+            description=f"Tu as acheté <@&{role_id}> pour **{format_amount(prix)}💰**.\nLe rôle t'a été attribué avec succès.",
             color=discord.Color.green()
         )
     else:
         embed = Embed(
             title="✅ Achat réussi !",
-            description=f"Tu as acheté <@&{role_id}> pour **{prix}💰**.\n\n⚠️ *Impossible d'attribuer le rôle automatiquement. Contacte un admin.*",
+            description=f"Tu as acheté <@&{role_id}> pour **{format_amount(prix)}💰**.\n\n⚠️ *Impossible d'attribuer le rôle automatiquement. Contacte un admin.*",
             color=discord.Color.orange()
         )
 
@@ -89,7 +90,7 @@ async def register(bot):
             discord.SelectOption(
                 label=f"#{item_id} — {nom}",
                 value=str(item_id),
-                description=f"{prix}💰"
+                description=f"{format_amount(prix)}💰"
             )
             for item_id, nom, prix in items[:25]
         ]

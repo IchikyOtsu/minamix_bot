@@ -1,6 +1,7 @@
 from discord import Interaction, Embed
 import discord
 from src.utils.db import get_db_connection
+from src.utils.format import format_amount
 
 async def register(bot):
     @bot.tree.command(
@@ -33,7 +34,7 @@ async def register(bot):
         for item_id, role_id, prix, nom, description in items:
             desc = description if description else "Aucune description."
             embed.add_field(
-                name=f"#{item_id} — {nom} — {prix}💰",
+                name=f"#{item_id} — {nom} — {format_amount(prix)}💰",
                 value=f"<@&{role_id}>\n{desc}",
                 inline=False
             )

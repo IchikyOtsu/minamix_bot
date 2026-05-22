@@ -1,10 +1,11 @@
 import discord
+from src.utils.format import format_amount
 
 def create_balance_embed(user: discord.User, balance: int, title: str = None) -> discord.Embed:
-    
+
     embed = discord.Embed(
         title=title or f"💰 Solde de {user.name}",
-        description=f"Vous avez actuellement **{balance}💵**.",
+        description=f"Vous avez actuellement **{format_amount(balance)}💵**.",
         color=discord.Color.gold()
     )
     embed.set_footer(text="Système d'économie")
