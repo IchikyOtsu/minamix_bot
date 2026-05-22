@@ -38,12 +38,24 @@ async def _main_async():
     intents.message_content = True
     bot = commands.Bot(command_prefix="!", intents=intents)
 
+    GUILD_IDS = [
+        1437105431741730860,
+        1482529716463210506,
+    ]
+
     @bot.event
     async def on_ready():
         print(f"Bot connecté : {bot.user}")
         try:
-            synced = await bot.tree.sync()
-            print(f"Slash commands synchronisées : {len(synced)}")
+            # Reset les commandes globales pour éviter les doublons
+            bot.tree.clear_commands(guild=None)
+            await bot.tree.sync()
+
+            for guild_id in GUILD_IDS:
+                guild = discord.Object(id=guild_id)
+                bot.tree.copy_global_to(guild=guild)
+                synced = await bot.tree.sync(guild=guild)
+                print(f"[SYNC] {len(synced)} commandes synchronisées sur le serveur {guild_id}")
         except Exception as e:
             print("Erreur sync:", e)
 
