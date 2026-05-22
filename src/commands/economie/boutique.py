@@ -4,7 +4,7 @@ from src.utils.db import get_db_connection
 
 async def register(bot):
     @bot.tree.command(
-        name="boutique",
+        name="shop",
         description="Affiche la boutique des rôles disponibles."
     )
     async def boutique(interaction: Interaction):
@@ -26,7 +26,7 @@ async def register(bot):
 
         embed = Embed(
             title="🛍️ Boutique des rôles",
-            description="Utilise `/buy <numéro>` pour acheter un rôle.",
+            description="Utilise `/buy <numéro>` pour acheter.",
             color=0x00FFAA
         )
 

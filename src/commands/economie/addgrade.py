@@ -6,8 +6,8 @@ from src.utils.db import get_db_connection
 async def register(bot):
 
     @bot.tree.command(
-        name="addgrade",
-        description="Ajouter un grade à la boutique (Admin seulement)"
+        name="additem",
+        description="Ajouter un rôle à la boutique (Admin seulement)"
     )
     @app_commands.describe(
         role="Le rôle Discord à ajouter dans la boutique",

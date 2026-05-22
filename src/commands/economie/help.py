@@ -12,9 +12,9 @@ async def register(bot):
         embed.add_field(
             name="Économie",
             value=(
-                "`/solde` — Voir votre solde\n"
+                "`/balance` — Voir votre solde\n"
                 "`/work` — Gagner des coins (cooldown : 1 semaine)\n"
-                "`/boutique` — Voir les rôles disponibles à l'achat\n"
+                "`/shop` — Voir les rôles disponibles à l'achat\n"
                 "`/buy [numéro]` — Acheter un rôle (liste déroulante si numéro omis)"
             ),
             inline=False
@@ -23,10 +23,10 @@ async def register(bot):
         embed.add_field(
             name="Administration 🔒",
             value=(
-                "`/addargent <user> <montant>` — Ajouter des coins à un utilisateur\n"
-                "`/retirerargent <user> <montant>` — Retirer des coins à un utilisateur\n"
-                "`/addgrade <role> <prix> <nom> [description]` — Ajouter un rôle à la boutique\n"
-                "`/supprimergrade <numéro>` — Supprimer un article de la boutique"
+                "`/addmoney <user> <montant>` — Ajouter des coins à un utilisateur\n"
+                "`/removemoney <user> <montant>` — Retirer des coins à un utilisateur\n"
+                "`/additem <role> <prix> <nom> [description]` — Ajouter un rôle à la boutique\n"
+                "`/removeitem <numéro>` — Supprimer un article de la boutique"
             ),
             inline=False
         )

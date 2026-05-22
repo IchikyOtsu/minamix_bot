@@ -7,7 +7,7 @@ from src.utils.embed import create_balance_embed
 
 async def register(bot):
     @bot.tree.command(
-        name="retirerargent",
+        name="removemoney",
         description="Retirer de l'argent à un utilisateur (Admin seulement)"
     )
     @app_commands.describe(

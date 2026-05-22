@@ -4,8 +4,8 @@ from src.utils.db import get_db_connection
 
 async def register(bot):
     @bot.tree.command(
-        name="supprimergrade",
-        description="Supprimer un grade de la boutique (Admin seulement)"
+        name="removeitem",
+        description="Supprimer un article de la boutique (Admin seulement)"
     )
     @app_commands.describe(numero="Numéro de l'article affiché dans /boutique")
     async def supprimergrade(interaction: Interaction, numero: int):
