@@ -1,5 +1,6 @@
 from discord import Interaction
 import discord
+from src.utils.embed import set_bot_footer
 
 async def register(bot):
     @bot.tree.command(name="help", description="Affiche toutes les commandes du bot.")
@@ -32,5 +33,5 @@ async def register(bot):
             inline=False
         )
 
-        embed.set_footer(text="Système d'économie")
+        set_bot_footer(embed, interaction)
         await interaction.response.send_message(embed=embed, ephemeral=False)

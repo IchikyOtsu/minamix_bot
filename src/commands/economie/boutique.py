@@ -2,6 +2,7 @@ from discord import Interaction, Embed
 import discord
 from src.utils.db import get_db_connection
 from src.utils.format import format_amount
+from src.utils.embed import set_bot_footer
 
 async def register(bot):
     @bot.tree.command(
@@ -21,7 +22,7 @@ async def register(bot):
                 description="La boutique est vide pour le moment.",
                 color=discord.Color.orange()
             )
-            embed.set_footer(text="Système d'économie")
+            set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed)
             return
 
@@ -39,5 +40,5 @@ async def register(bot):
                 inline=False
             )
 
-        embed.set_footer(text="Système d'économie")
+        set_bot_footer(embed, interaction)
         await interaction.response.send_message(embed=embed)

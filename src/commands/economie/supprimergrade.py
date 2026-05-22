@@ -1,6 +1,7 @@
 from discord import Interaction, app_commands
 import discord
 from src.utils.db import get_db_connection
+from src.utils.embed import set_bot_footer
 
 async def register(bot):
     @bot.tree.command(
@@ -43,5 +44,6 @@ async def register(bot):
             description=f"L'article **#{numero} — {role_name}** (<@&{role_id}>) a été supprimé de la boutique.",
             color=discord.Color.green()
         )
+        set_bot_footer(embed, interaction)
         await interaction.response.send_message(embed=embed, ephemeral=True)
         db.close()

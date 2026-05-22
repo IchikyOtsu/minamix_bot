@@ -3,7 +3,7 @@ from discord import app_commands
 import discord
 from src.utils.db import get_db_connection
 from src.utils.wallet import modify_user_balance
-from src.utils.embed import create_balance_embed
+from src.utils.embed import create_balance_embed, set_bot_footer
 
 async def register(bot):
     @bot.tree.command(
@@ -36,7 +36,7 @@ async def register(bot):
         db = get_db_connection()
         new_balance = await modify_user_balance(db, user.id, montant, "remove")
 
-        embed = create_balance_embed(user, new_balance)
+        embed = create_balance_embed(user, new_balance, interaction)
         embed.title = f"💸 {montant} retiré à {user.name}"
 
         await interaction.response.send_message(embed=embed, ephemeral=True)

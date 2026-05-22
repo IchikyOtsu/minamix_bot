@@ -2,6 +2,7 @@ from discord import Interaction, Role, Embed
 from discord import app_commands
 import discord
 from src.utils.db import get_db_connection
+from src.utils.embed import set_bot_footer
 
 async def register(bot):
 
@@ -58,7 +59,7 @@ async def register(bot):
                 description=f"**{role.name}** a été ajouté à la boutique pour **{prix}💰**",
                 color=discord.Color.green()
             )
-            embed.set_footer(text="Système d'économie")
+            set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
         except Exception as e:

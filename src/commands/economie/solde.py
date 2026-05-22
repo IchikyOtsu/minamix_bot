@@ -8,7 +8,7 @@ async def register(bot):
     async def solde(interaction: Interaction):
         db = get_db_connection()
         balance = await get_user_balance(db, interaction.user.id)
-        embed = create_balance_embed(interaction.user, balance)
+        embed = create_balance_embed(interaction.user, balance, interaction)
 
         await interaction.response.send_message(embed=embed, ephemeral=False)
 
