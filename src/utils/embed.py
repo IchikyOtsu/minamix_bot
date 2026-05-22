@@ -5,7 +5,7 @@ from src.utils.format import format_amount
 def set_bot_footer(embed: discord.Embed, interaction: discord.Interaction) -> None:
     bot_user = interaction.client.user
     embed.set_footer(
-        text=f"{bot_user.name} • {bot_user.id}",
+        text=bot_user.name,
         icon_url=bot_user.avatar.url if bot_user.avatar else None
     )
 

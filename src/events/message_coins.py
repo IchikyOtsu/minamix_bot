@@ -9,6 +9,10 @@ async def register(bot):
         if message.author.bot:
             return
 
+        if bot.user in message.mentions:
+            await message.reply("Tu veux quoi toi ?")
+            return
+
         message_length = len(message.content)
 
         if message_length < 1000:
