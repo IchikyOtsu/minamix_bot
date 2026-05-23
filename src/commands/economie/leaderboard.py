@@ -17,7 +17,7 @@ async def register(bot):
         db = get_db_connection()
         cursor = db.cursor()
         cursor.execute(
-            "SELECT user_id, balance FROM wallets ORDER BY balance DESC LIMIT 10"
+            "SELECT user_id, balance FROM wallets ORDER BY balance DESC LIMIT 20"
         )
         rows = cursor.fetchall()
         cursor.close()
@@ -29,10 +29,16 @@ async def register(bot):
 
         medals = {1: "🥇", 2: "🥈", 3: "🥉"}
         lines = []
-        for rank, (user_id, balance) in enumerate(rows, start=1):
+        rank = 0
+        for user_id, balance in rows:
+            if not interaction.guild.get_member(user_id):
+                continue
+            rank += 1
             prefix = medals.get(rank, f"`#{rank}`")
             name = _resolve_name(user_id)
             lines.append(f"{prefix} {name} — **{format_amount(balance)}💰**")
+            if rank == 10:
+                break
 
         embed = Embed(
             title="🏆 Leaderboard",
