@@ -1,6 +1,31 @@
 from pathlib import Path
 
 
+# Column migrations: (table, column, ALTER statement)
+_COLUMN_MIGRATIONS = [
+    (
+        "boutique_roles",
+        "exclusif",
+        "ALTER TABLE boutique_roles ADD COLUMN exclusif TINYINT(1) NOT NULL DEFAULT 0",
+    ),
+]
+
+
+def _run_migrations(db):
+    cursor = db.cursor()
+    for table, column, sql in _COLUMN_MIGRATIONS:
+        cursor.execute(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS "
+            "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s",
+            (table, column),
+        )
+        if cursor.fetchone()[0] == 0:
+            cursor.execute(sql)
+            db.commit()
+            print(f"[MIGRATION] {table}.{column} ajouté")
+    cursor.close()
+
+
 def init_db(db):
     model_dir = Path("src/model")
     if not model_dir.exists():
@@ -17,3 +42,5 @@ def init_db(db):
         except Exception as e:
             print(f"[ERREUR SQL] {sql_file}: {e}")
     cursor.close()
+
+    _run_migrations(db)
