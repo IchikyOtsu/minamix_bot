@@ -34,8 +34,8 @@ async def register(bot):
             await interaction.response.send_message(embed=embed)
             return
 
-        color = random.choice(_COLORS)
-        is_hibiscus = color == _HIBISCUS
+        is_hibiscus = random.random() < 0.001
+        color = _HIBISCUS if is_hibiscus else random.choice(_COLORS[:-1])
 
         standard = [(num, r, p, n) for num, (_, r, p, n, _d, ex) in enumerate(items, start=1) if not ex]
         exclusifs = [(num, r, p, n) for num, (_, r, p, n, _d, ex) in enumerate(items, start=1) if ex]
