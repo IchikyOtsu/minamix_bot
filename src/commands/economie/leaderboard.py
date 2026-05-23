@@ -29,11 +29,7 @@ async def register(bot):
 
         medals = {1: "🥇", 2: "🥈", 3: "🥉"}
         lines = []
-        rank = 0
-        for user_id, balance in rows:
-            if not interaction.guild.get_member(user_id):
-                continue
-            rank += 1
+        for rank, (user_id, balance) in enumerate(rows, start=1):
             prefix = medals.get(rank, f"`#{rank}`")
             name = _resolve_name(user_id)
             lines.append(f"{prefix} {name} — **{format_amount(balance)}💰**")
