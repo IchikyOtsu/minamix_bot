@@ -19,8 +19,21 @@ async def register(bot):
             return
 
         if bot.user in message.mentions:
-            await message.reply("Tu veux quoi toi ?")
+            from datetime import datetime
+            now_time = datetime.now().time()
+            if now_time.hour == 0 and now_time.minute < 10:
+                await message.reply("T'as vraiment que ça à faire à cette heure-ci ?")
+            else:
+                await message.reply("Tu veux quoi toi ?")
             return
+
+        content = message.content.strip()
+        if "gg" in content.lower():
+            await message.add_reaction("🏆")
+        if content.lower() == "ok":
+            await message.add_reaction("👍")
+        if len(content) == 1:
+            await message.add_reaction("🤏")
 
         now = time.time()
         if now - _last_gain.get(message.author.id, 0) < COOLDOWN:
