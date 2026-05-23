@@ -2,6 +2,10 @@ from discord import Interaction, Member, app_commands
 import discord
 from src.utils.shop import get_shop_items
 from src.utils.embed import set_bot_footer
+from src.utils.balance import get_user_balance
+from src.utils.wallet import modify_user_balance
+from src.utils.format import format_amount
+from src.utils.db import get_db_connection
 
 
 async def register(bot):
@@ -11,9 +15,14 @@ async def register(bot):
     )
     @app_commands.describe(
         numero="Numéro de l'article affiché dans /shop",
-        user="Utilisateur qui reçoit le rôle"
+        user="Utilisateur qui reçoit le rôle",
+        deduire="Déduire le prix du solde du receveur (Non par défaut)"
     )
-    async def giveitem(interaction: Interaction, numero: int, user: Member):
+    @app_commands.choices(deduire=[
+        app_commands.Choice(name="Non (gratuit)", value=0),
+        app_commands.Choice(name="Oui (déduit du solde)", value=1),
+    ])
+    async def giveitem(interaction: Interaction, numero: int, user: Member, deduire: int = 0):
         if not interaction.user.guild_permissions.administrator:
             embed = discord.Embed(title="❌ Permission refusée", color=discord.Color.red())
             set_bot_footer(embed, interaction)
@@ -32,13 +41,13 @@ async def register(bot):
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        _, role_id, _, nom, *__ = items[numero - 1]
+        _, role_id, prix, nom, *__ = items[numero - 1]
 
         role = interaction.guild.get_role(int(role_id))
         if not role:
             embed = discord.Embed(
                 title="❌ Rôle introuvable",
-                description=f"Le rôle associé à cet article n'existe plus sur le serveur.",
+                description="Le rôle associé à cet article n'existe plus sur le serveur.",
                 color=discord.Color.red()
             )
             set_bot_footer(embed, interaction)
@@ -55,6 +64,25 @@ async def register(bot):
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
+        if deduire:
+            db = get_db_connection()
+            balance = await get_user_balance(db, user.id)
+            if balance < prix:
+                embed = discord.Embed(
+                    title="❌ Solde insuffisant",
+                    description=(
+                        f"{user.mention} a **{format_amount(balance)}💰** "
+                        f"mais cet article coûte **{format_amount(prix)}💰**."
+                    ),
+                    color=discord.Color.red()
+                )
+                set_bot_footer(embed, interaction)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                db.close()
+                return
+            await modify_user_balance(db, user.id, prix, "remove")
+            db.close()
+
         try:
             await user.add_roles(role)
         except discord.Forbidden:
@@ -67,9 +95,13 @@ async def register(bot):
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
+        desc = f"{user.mention} a reçu <@&{role_id}> (**#{numero} — {nom}**)."
+        if deduire:
+            desc += f"\n**{format_amount(prix)}💰** déduit de son solde."
+
         embed = discord.Embed(
             title="✅ Rôle attribué",
-            description=f"{user.mention} a reçu <@&{role_id}> (**#{numero} — {nom}**).",
+            description=desc,
             color=discord.Color.green()
         )
         set_bot_footer(embed, interaction)
