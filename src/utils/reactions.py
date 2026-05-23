@@ -42,7 +42,7 @@ async def handle(message: Message) -> None:
         await message.add_reaction("👍")
         _mark_found(uid, "l_accord")
 
-    if len(content) == 1:
+    if len(content) == 1 and content.isascii() and content.strip():
         await message.add_reaction("🤏")
         _mark_found(uid, "l_essentiel")
 
