@@ -5,15 +5,8 @@ from src.utils.format import format_amount
 from src.utils.embed import set_bot_footer
 
 
-async def _resolve_name(bot, guild: discord.Guild, user_id: int) -> str:
-    member = guild.get_member(user_id)
-    if member:
-        return f"@{member.display_name}"
-    try:
-        user = await bot.fetch_user(user_id)
-        return f"@{user.name}"
-    except Exception:
-        return f"Utilisateur inconnu"
+def _resolve_name(user_id: int) -> str:
+    return f"<@{user_id}>"
 
 
 async def register(bot):
@@ -36,9 +29,13 @@ async def register(bot):
 
         medals = {1: "🥇", 2: "🥈", 3: "🥉"}
         lines = []
-        for rank, (user_id, balance) in enumerate(rows, start=1):
+        rank = 0
+        for user_id, balance in rows:
+            if not interaction.guild.get_member(user_id):
+                continue
+            rank += 1
             prefix = medals.get(rank, f"`#{rank}`")
-            name = await _resolve_name(bot, interaction.guild, user_id)
+            name = _resolve_name(user_id)
             lines.append(f"{prefix} {name} — **{format_amount(balance)}💰**")
 
         embed = Embed(
