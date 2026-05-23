@@ -5,10 +5,11 @@ from src.utils.db import get_db_connection
 
 # Internal keys → display names (deliberately vague)
 EGGS = {
-    "champion":   "Champion",
-    "l_accord":   "L'Accord",
+    "champion":    "Champion",
+    "l_accord":    "L'Accord",
     "l_essentiel": "L'Essentiel",
     "le_seigneur": "Le Seigneur",
+    "l_hibiscus":  "L'Hibiscus",
 }
 
 

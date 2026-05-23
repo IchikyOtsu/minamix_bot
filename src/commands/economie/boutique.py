@@ -1,8 +1,19 @@
+import random
 from discord import Interaction, Embed
 import discord
 from src.utils.shop import get_shop_items
 from src.utils.format import format_amount
 from src.utils.embed import set_bot_footer
+from src.utils.reactions import EGGS, _mark_found
+
+_COLORS = [
+    0x3498DB,  # bleu
+    0x2ECC71,  # vert
+    0x9B59B6,  # violet
+    0xE67E22,  # orange
+    0xB5264C,  # hibiscus
+]
+_HIBISCUS = 0xB5264C
 
 
 async def register(bot):
@@ -23,6 +34,9 @@ async def register(bot):
             await interaction.response.send_message(embed=embed)
             return
 
+        color = random.choice(_COLORS)
+        is_hibiscus = color == _HIBISCUS
+
         standard = [(num, r, p, n) for num, (_, r, p, n, _d, ex) in enumerate(items, start=1) if not ex]
         exclusifs = [(num, r, p, n) for num, (_, r, p, n, _d, ex) in enumerate(items, start=1) if ex]
 
@@ -40,7 +54,14 @@ async def register(bot):
         embed = Embed(
             title="🛍️ Boutique",
             description="\n".join(lines) + "\n\n*Utilise `/buy <numéro>` pour acheter.*",
-            color=0x2B2D31
+            color=color
         )
         set_bot_footer(embed, interaction)
         await interaction.response.send_message(embed=embed)
+
+        if is_hibiscus:
+            _mark_found(interaction.user.id, interaction.guild.id, "l_hibiscus")
+            await interaction.followup.send(
+                "🌺 Tu as débloqué un nouveau trophée secret. Utilise `/discoveries` pour le voir.",
+                ephemeral=True
+            )

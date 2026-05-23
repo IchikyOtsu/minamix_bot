@@ -73,4 +73,4 @@ async def register(bot):
             color=discord.Color.green()
         )
         set_bot_footer(embed, interaction)
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed)
