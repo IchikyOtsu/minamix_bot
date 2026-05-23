@@ -1,7 +1,13 @@
+import time
+import random
 import discord
 from discord import Message
 from src.utils.wallet import modify_user_balance
-import random
+from src.config import GUILD_IDS
+
+_last_gain: dict[int, float] = {}
+COOLDOWN = 60
+
 
 async def register(bot):
     @bot.event
@@ -9,16 +15,20 @@ async def register(bot):
         if message.author.bot:
             return
 
+        if message.guild is None or message.guild.id not in GUILD_IDS:
+            return
+
         if bot.user in message.mentions:
             await message.reply("Tu veux quoi toi ?")
             return
 
-        message_length = len(message.content)
+        now = time.time()
+        if now - _last_gain.get(message.author.id, 0) < COOLDOWN:
+            await bot.process_commands(message)
+            return
+        _last_gain[message.author.id] = now
 
-        if message_length < 1000:
-            gain = random.randint(15, 25)
-        else:
-            gain = random.randint(30, 50)
+        gain = random.randint(30, 50) if len(message.content) >= 1000 else random.randint(15, 25)
 
         try:
             from src.utils.db import get_db_connection

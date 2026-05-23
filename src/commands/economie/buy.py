@@ -1,10 +1,11 @@
 from discord import Interaction, Embed, app_commands
 import discord
-from discord.ui import Select, View
+from discord.ui import Select
 from src.utils.db import get_db_connection
 from src.utils.balance import get_user_balance
 from src.utils.wallet import modify_user_balance
 from src.utils.format import format_amount
+from src.utils.views import ExpiringView
 
 
 async def _process_purchase(interaction: Interaction, item_id: int):
@@ -101,6 +102,7 @@ async def register(bot):
             await _process_purchase(inter, int(select.values[0]))
 
         select.callback = callback
-        view = View()
+        view = ExpiringView()
         view.add_item(select)
         await interaction.response.send_message("Quel article veux-tu acheter ?", view=view, ephemeral=True)
+        view.message = await interaction.original_response()

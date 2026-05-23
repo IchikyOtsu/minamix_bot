@@ -36,6 +36,16 @@ async def _main():
     intents.message_content = True
     bot = commands.Bot(command_prefix="!", intents=intents)
 
+    async def guild_only(interaction: discord.Interaction) -> bool:
+        if interaction.guild_id not in GUILD_IDS:
+            await interaction.response.send_message(
+                "❌ Ce bot n'est pas disponible sur ce serveur.", ephemeral=True
+            )
+            return False
+        return True
+
+    bot.tree.interaction_check = guild_only
+
     @bot.event
     async def on_ready():
         print(f"Connecté : {bot.user}")
