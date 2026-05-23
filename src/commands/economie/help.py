@@ -9,7 +9,8 @@ _ECONOMY = (
     "`/work` — Gagner des coins (cooldown : 1 semaine)\n"
     "`/shop` — Voir les rôles disponibles à l'achat\n"
     "`/buy [numéro]` — Acheter un rôle (liste déroulante si numéro omis)\n"
-    "`/leaderboard` — Top 10 des utilisateurs les plus riches"
+    "`/leaderboard` — Top 10 des utilisateurs les plus riches\n"
+    "`/discoveries` — Voir tes découvertes secrètes"
 )
 
 _ADMIN = (
