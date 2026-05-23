@@ -18,7 +18,8 @@ _ADMIN = (
     "`/removemoney <user> <montant>` — Retirer des coins à un utilisateur\n"
     "`/additem <role> <prix> <nom> [exclusif] [description]` — Ajouter un rôle à la boutique\n"
     "`/edititem <numéro> [prix] [nom] [description] [exclusif]` — Modifier un article\n"
-    "`/removeitem <numéro>` — Supprimer un article de la boutique"
+    "`/removeitem <numéro>` — Supprimer un article de la boutique\n"
+    "`/giveitem <numéro> <user>` — Donner un article à un utilisateur"
 )
 
 _MODERATION = (
