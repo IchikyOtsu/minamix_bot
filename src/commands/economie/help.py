@@ -16,7 +16,8 @@ _ECONOMY = (
 _ADMIN = (
     "`/addmoney <user> <montant>` — Ajouter des coins à un utilisateur\n"
     "`/removemoney <user> <montant>` — Retirer des coins à un utilisateur\n"
-    "`/additem <role> <prix> <nom> [description]` — Ajouter un rôle à la boutique\n"
+    "`/additem <role> <prix> <nom> [exclusif] [description]` — Ajouter un rôle à la boutique\n"
+    "`/edititem <numéro> [prix] [nom] [description] [exclusif]` — Modifier un article\n"
     "`/removeitem <numéro>` — Supprimer un article de la boutique"
 )
 
