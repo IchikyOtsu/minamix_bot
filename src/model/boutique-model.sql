@@ -3,5 +3,6 @@ CREATE TABLE IF NOT EXISTS boutique_roles (
     role_id BIGINT NOT NULL,
     prix INT NOT NULL,
     nom VARCHAR(255) NOT NULL,
-    description TEXT
+    description TEXT,
+    exclusif TINYINT(1) NOT NULL DEFAULT 0
 );
