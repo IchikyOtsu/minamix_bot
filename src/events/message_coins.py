@@ -34,6 +34,11 @@ async def register(bot):
             await message.add_reaction("👍")
         if len(content) == 1:
             await message.add_reaction("🤏")
+        if content.lower() == "un anneau":
+            import os
+            asset = os.path.join(os.path.dirname(__file__), "..", "assets", "one_bot.jpg")
+            if os.path.exists(asset):
+                await message.reply(file=discord.File(asset))
 
         now = time.time()
         if now - _last_gain.get(message.author.id, 0) < COOLDOWN:
