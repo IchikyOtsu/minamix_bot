@@ -17,6 +17,17 @@ def _get_items():
 async def _process_purchase(interaction: Interaction, role_id: int, prix: int, nom_role: str):
     await interaction.response.defer()
 
+    role = interaction.guild.get_role(int(role_id))
+    if role and role in interaction.user.roles:
+        embed = Embed(
+            title="❌ Rôle déjà possédé",
+            description=f"Tu as déjà <@&{role_id}>.",
+            color=discord.Color.red()
+        )
+        set_bot_footer(embed, interaction)
+        await interaction.edit_original_response(embed=embed, view=None)
+        return
+
     db = get_db_connection()
     user_id = interaction.user.id
     current_balance = await get_user_balance(db, user_id)
