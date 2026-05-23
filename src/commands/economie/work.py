@@ -2,60 +2,62 @@ from discord import Interaction, Embed
 from src.utils.db import get_db_connection
 from src.utils.wallet import modify_user_balance
 from src.utils.format import format_amount
+from src.utils.embed import set_bot_footer
 import random
 import time
 import discord
 
 JOKES = [
-    "Pourquoi les plongeurs plongent-ils toujours en arrière et jamais en avant ? Parce que sinon ils tombent dans le bateau !",
+    "Pourquoi les plongeurs plongent-ils toujours en arrière ? Parce que sinon ils tomberaient dans le bateau !",
     "Quel est le comble d'un électricien ? De ne pas être au courant !",
-    "Pourquoi les会计师 portent-ils des lunettes ? Parce qu'ils additionnent tout !",
     "Quel est le pain préféré des programmeurs ? Le pain bis (byte) !",
     "Pourquoi les poissons ne jouent-ils pas au poker ? Parce qu'il y a trop de requins !",
     "Quel est le comble d'un jardinier ? De ne pas savoir planter un clou !",
     "Pourquoi les informaticiens confondent-ils Halloween et Noël ? Parce que OCT 31 = DEC 25 !",
-    "Quel est le comble d'un chauffard ? De prendre le train pour aller au travail !",
-    "Pourquoi les oiseaux volent-ils en formation ? Pour payer moins de péage !",
+    "Quel est le comble d'un chauffeur ? De prendre le train pour aller au travail !",
+    "Pourquoi les oiseaux volent-ils en formation en V ? Pour payer moins de péage !",
     "Quel est le comble d'un couvreur ? De ne pas trouver le toit de sa maison !",
-    "Pourquoi les grues sont-elles toujours fatiguées ? Parce qu'elles travaillent debout !",
     "Quel est le comble d'un boucher ? De ne pas avoir le cœur à l'ouvrage !",
-    "Pourquoi les maçons portent-ils des ceintures ? Pour tenir les murs !",
     "Quel est le comble d'un astronome ? De ne pas voir plus loin que son nez !",
-    "Pourquoi les boulangers sont-ils toujours de bonne humeur ? Parce que leur métier est pain !",
-    "Quel est le comble d'un horloger ? De ne jamais avoir une minute à perdre !",
-    "Pourquoi les pilotes de taxi sont-ils toujours pressés ? Parce qu'ils ont des courses à faire !",
+    "Pourquoi les boulangers sont-ils toujours de bonne humeur ? Parce que leur métier c'est du gâteau !",
+    "Quel est le comble d'un horloger ? De ne jamais avoir une minute à lui !",
     "Quel est le comble d'un bibliothécaire ? De ne pas savoir où ranger ses livres !",
-    "Pourquoi les vetsrinaires ont-ils toujours des animaux autour d'eux ? Parce qu'ils adorent les bêtes !",
-    "Quel est le comble d'un facteur ? De ne jamais avoir le temps de lire le courrier !",
-    "Pourquoi les architectes dessinent-ils toujours en noir et blanc ? Pour faire économies de couleurs !",
+    "Pourquoi les vétérinaires sont-ils toujours débordés ? Parce que leurs patients ne prennent jamais de rendez-vous !",
+    "Quel est le comble d'un facteur ? De ne jamais avoir le temps de lire son courrier !",
     "Quel est le comble d'un pompier ? De ne pas trouver la sortie !",
-    "Pourquoi les dentistes sont-ils toujours souriants ? Parce qu'ils travaillent à la chaîne !",
-    "Quel est le comble d'un jardinier ? De ne pas savoir quel temps il fait !",
-    "Pourquoi les avocats portent-ils des robes ? Parce que le costume c'est trop cher !",
-    "Quel est le comble d'un joueur d'échecs ? De ne pas pouvoir caser sa reine !",
-    "Pourquoi les médecins sont-ils toujours pressés ? Parce qu'ils ont des patients à voir !",
-    "Quel est le comble d'un mécanicien ? De ne pas savoir réparer sa propre voiture !",
-    "Pourquoi les photographes sont-ils toujours flous ? Parce qu'ils développent leur talent !",
-    "Quel est le comble d'un directeur ? De ne pas avoir le temps de diriger !",
-    "Pourquoi les程序员 mangent-ils des nouilles ? Parce qu'ils adorent le code !",
-    "Quel est le comble d'un腰鼓手 ? De ne pas savoir percussion !",
-    "Pourquoi les enseignants ont-ils des vacances ? Pour récupérer des élèves !",
-    "Quel est le comble d'un踢足球运动员 ? De ne pas savoir où donner des coups de pied !",
-    "Pourquoi les快递员 courent-ils toujours ? Pour ne pas rater leur tournée !",
-    "Quel est le comble d'un科学家 ? De ne pas trouver la réponse !",
-    "Pourquoi les厨师 portent-ils un chapeau ? Pour se couvrir la tête quand ils mijotent !",
-    "Quel est le comble d'un画家 ? De ne pas voir les couleurs !",
-    "Pourquoi les木匠 travail。他们总是敲敲打打！",
-    "Quel est le comble d'un商人 ? De ne jamais avoir assez d'argent !",
-    "Pourquoi les程序员 adorent-ils les bugs ? Parce qu'ils peuvent les corriger !",
-    "Quel est le comble d'un会计 ? De toujours compter les sous !",
-    "Pourquoi les律师总是赢得辩论？因为他们知道法律！",
-    "Quel est le comble d'un画家 ? De ne jamais finir son œuvre !",
-    "Pourquoi les木匠 mesurent-ils deux fois ? Pour ne pas se tromper !",
-    "Quel est le comble d'un农民 ? De travailler à la sueur de son front !",
-    "Pourquoi les快递员 connaissent-ils tous les chemins ? Parce qu'ils livrent partout !",
-    "Quel est le comble d'un老师 ? De ne pas avoir la réponse !",
-    "Pourquoi les程序员 utilisent-ils des raccourcis ? Pour aller plus vite !",
+    "Quel est le comble d'un dentiste ? D'avoir les dents du bonheur !",
+    "Pourquoi les avocats travaillent-ils si tard ? Parce que la justice est lente mais eux ne le sont pas !",
+    "Quel est le comble d'un joueur d'échecs ? De ne pas savoir quoi faire de sa reine !",
+    "Quel est le comble d'un médecin ? D'être malade comme un chien !",
+    "Quel est le comble d'un mécanicien ? De tomber en panne sur l'autoroute !",
+    "Pourquoi les photographes sont-ils toujours zen ? Parce qu'ils savent prendre du recul !",
+    "Pourquoi les enseignants portent-ils des lunettes ? Pour mieux voir leurs élèves... de loin !",
+    "Quel est le comble d'un coiffeur ? D'être à bout de nerfs !",
+    "Pourquoi les informaticiens n'aiment-ils pas la nature ? Parce qu'il y a trop de bugs !",
+    "Quel est le comble d'un géographe ? De ne pas savoir où il habite !",
+    "Pourquoi les cyclistes pédalent-ils si vite ? Pour ne pas se faire doubler par leurs idées !",
+    "Quel est le comble d'un cuisinier ? De manquer de recul !",
+    "Pourquoi les fantômes sont-ils de mauvais menteurs ? Parce qu'on voit à travers eux !",
+    "Quel est le comble d'un pêcheur ? De ne pas savoir nager !",
+    "Pourquoi les squelettes ne se battent-ils jamais ? Parce qu'ils n'ont pas le cœur à ça !",
+    "Quel est le comble d'un alpiniste ? D'avoir le vertige de ses succès !",
+    "Pourquoi les vaches portent-elles des cloches ? Parce que leurs cornes ne fonctionnent pas !",
+    "Quel est le comble d'un boulanger ? D'être dans le pétrin !",
+    "Pourquoi les plantes ne parlent-elles pas ? Parce qu'elles ont la langue dans leur pot !",
+    "Quel est le comble d'un nageur ? De couler à pic dans ses examens !",
+    "Pourquoi les banquiers sont-ils si calmes ? Parce qu'ils ont des intérêts à ménager !",
+    "Quel est le comble d'un musicien ? De perdre la note !",
+    "Pourquoi les chats sont-ils sur Internet ? Parce qu'ils cherchent des souris !",
+    "Quel est le comble d'un peintre ? De ne pas voir les choses en couleur !",
+    "Pourquoi les montres suisses sont-elles si précises ? Parce qu'elles ont du temps devant elles !",
+    "Quel est le comble d'un astronaute ? D'avoir les pieds sur terre !",
+    "Pourquoi les livres de maths sont-ils tristes ? Parce qu'ils ont trop de problèmes !",
+    "Quel est le comble d'un menuisier ? De ne pas savoir sur quel pied danser !",
+    "Pourquoi les éléphants ne jouent-ils pas aux cartes dans la jungle ? Parce qu'il y a trop de tricheurs !",
+    "Quel est le comble d'un joueur de tennis ? De faire une faute de frappe !",
+    "Pourquoi les robots ne mangent-ils pas ? Parce qu'ils ont déjà des puces !",
+    "Quel est le comble d'un archéologue ? D'avoir une carrière en ruines !",
+    "Pourquoi les abeilles bourdonnent-elles ? Parce qu'elles ne savent pas les paroles !",
 ]
 
 async def register(bot):
@@ -88,7 +90,7 @@ async def register(bot):
                         description=f"Tu pourras travailler à nouveau dans **{days}j {hours}h {minutes}min**.",
                         color=discord.Color.orange()
                     )
-                    embed.set_footer(text="Système d'économie")
+                    set_bot_footer(embed, interaction)
                     await interaction.response.send_message(embed=embed, ephemeral=True)
                     db.close()
                     return
@@ -111,6 +113,6 @@ async def register(bot):
             description=f"Tu as gagné **{format_amount(gain)}💰** !\n\n**😄 Blague du jour :**\n_{joke}_\n\n📊 Nouveau solde : **{format_amount(new_balance)}💰**",
             color=discord.Color.green()
         )
-        embed.set_footer(text="Prochain travail possible dans 1 semaine")
+        set_bot_footer(embed, interaction)
         await interaction.response.send_message(embed=embed, ephemeral=False)
         db.close()
