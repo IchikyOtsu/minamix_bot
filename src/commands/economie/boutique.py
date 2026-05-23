@@ -12,7 +12,7 @@ async def register(bot):
     async def boutique(interaction: Interaction):
         db = get_db_connection()
         cursor = db.cursor()
-        cursor.execute("SELECT id, role_id, prix, nom, description FROM boutique_roles")
+        cursor.execute("SELECT role_id, prix, nom, description FROM boutique_roles ORDER BY id")
         items = cursor.fetchall()
         db.close()
 
@@ -32,10 +32,10 @@ async def register(bot):
             color=0x00FFAA
         )
 
-        for item_id, role_id, prix, nom, description in items:
+        for num, (role_id, prix, nom, description) in enumerate(items, start=1):
             desc = description if description else "Aucune description."
             embed.add_field(
-                name=f"#{item_id} — {nom} — {format_amount(prix)}💰",
+                name=f"#{num} — {nom} — {format_amount(prix)}💰",
                 value=f"<@&{role_id}>\n{desc}",
                 inline=False
             )

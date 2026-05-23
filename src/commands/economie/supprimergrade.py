@@ -22,28 +22,30 @@ async def register(bot):
         db = get_db_connection()
         cursor = db.cursor()
 
-        cursor.execute("SELECT role_id, nom FROM boutique_roles WHERE id = %s", (numero,))
-        result = cursor.fetchone()
+        cursor.execute("SELECT id, role_id, nom FROM boutique_roles ORDER BY id")
+        items = cursor.fetchall()
 
-        if not result:
+        if numero < 1 or numero > len(items):
             embed = discord.Embed(
-                title="❌ Article non trouvé",
-                description=f"Aucun article avec le numéro `#{numero}` n'existe dans la boutique.",
+                title="❌ Numéro invalide",
+                description=f"Il n'y a que **{len(items)}** article(s) dans la boutique.",
                 color=discord.Color.red()
             )
+            set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
             db.close()
             return
 
-        role_id, role_name = result
-        cursor.execute("DELETE FROM boutique_roles WHERE id = %s", (numero,))
+        actual_id, role_id, role_name = items[numero - 1]
+        cursor.execute("DELETE FROM boutique_roles WHERE id = %s", (actual_id,))
         db.commit()
+        cursor.close()
+        db.close()
 
         embed = discord.Embed(
-            title="✅ Grade supprimé",
+            title="✅ Article supprimé",
             description=f"L'article **#{numero} — {role_name}** (<@&{role_id}>) a été supprimé de la boutique.",
             color=discord.Color.green()
         )
         set_bot_footer(embed, interaction)
         await interaction.response.send_message(embed=embed, ephemeral=True)
-        db.close()
