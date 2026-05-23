@@ -1,14 +1,17 @@
 from discord import Interaction, app_commands
+from discord.ui import Button
 import discord
 from src.utils.db import get_db_connection
 from src.utils.embed import set_bot_footer
+from src.utils.views import ExpiringView
+
 
 async def register(bot):
     @bot.tree.command(
         name="removeitem",
         description="Supprimer un article de la boutique (Admin seulement)"
     )
-    @app_commands.describe(numero="Numéro de l'article affiché dans /boutique")
+    @app_commands.describe(numero="Numéro de l'article affiché dans /shop")
     async def supprimergrade(interaction: Interaction, numero: int):
         if not interaction.user.guild_permissions.administrator:
             embed = discord.Embed(
@@ -16,14 +19,16 @@ async def register(bot):
                 description="Vous n'avez pas la permission d'utiliser cette commande.",
                 color=discord.Color.red()
             )
+            set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         db = get_db_connection()
         cursor = db.cursor()
-
         cursor.execute("SELECT id, role_id, nom FROM boutique_roles ORDER BY id")
         items = cursor.fetchall()
+        cursor.close()
+        db.close()
 
         if numero < 1 or numero > len(items):
             embed = discord.Embed(
@@ -33,19 +38,46 @@ async def register(bot):
             )
             set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
-            db.close()
             return
 
         actual_id, role_id, role_name = items[numero - 1]
-        cursor.execute("DELETE FROM boutique_roles WHERE id = %s", (actual_id,))
-        db.commit()
-        cursor.close()
-        db.close()
 
         embed = discord.Embed(
-            title="✅ Article supprimé",
-            description=f"L'article **#{numero} — {role_name}** (<@&{role_id}>) a été supprimé de la boutique.",
-            color=discord.Color.green()
+            title="🗑️ Confirmer la suppression ?",
+            description=f"Tu t'apprêtes à supprimer **#{numero} — {role_name}** (<@&{role_id}>) de la boutique.",
+            color=discord.Color.orange()
         )
         set_bot_footer(embed, interaction)
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        view = ExpiringView(timeout=30)
+        confirm_btn = Button(label="Supprimer", style=discord.ButtonStyle.red, emoji="🗑️")
+        cancel_btn = Button(label="Annuler", style=discord.ButtonStyle.grey, emoji="❌")
+
+        async def confirm_callback(inter: Interaction):
+            db2 = get_db_connection()
+            cursor2 = db2.cursor()
+            cursor2.execute("DELETE FROM boutique_roles WHERE id = %s", (actual_id,))
+            db2.commit()
+            cursor2.close()
+            db2.close()
+
+            result_embed = discord.Embed(
+                title="✅ Article supprimé",
+                description=f"L'article **#{numero} — {role_name}** (<@&{role_id}>) a été supprimé de la boutique.",
+                color=discord.Color.green()
+            )
+            set_bot_footer(result_embed, inter)
+            await inter.response.edit_message(embed=result_embed, view=None)
+
+        async def cancel_callback(inter: Interaction):
+            cancel_embed = discord.Embed(title="❌ Suppression annulée", color=discord.Color.red())
+            set_bot_footer(cancel_embed, inter)
+            await inter.response.edit_message(embed=cancel_embed, view=None)
+
+        confirm_btn.callback = confirm_callback
+        cancel_btn.callback = cancel_callback
+        view.add_item(confirm_btn)
+        view.add_item(cancel_btn)
+
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        view.message = await interaction.original_response()

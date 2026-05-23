@@ -22,7 +22,8 @@ _ADMIN = (
 _MODERATION = (
     "`/setlogs <channel>` — Définir le channel de logs\n"
     "`/addantispam <channel>` — Ajouter un channel anti-spam (ban instantané)\n"
-    "`/removeantispam <channel>` — Retirer un channel du mode anti-spam"
+    "`/removeantispam <channel>` — Retirer un channel du mode anti-spam\n"
+    "`/resetbalances` — Remettre à zéro tous les soldes (triple confirmation)"
 )
 
 async def register(bot):
