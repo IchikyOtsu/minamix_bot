@@ -34,8 +34,7 @@ async def register(bot):
             await interaction.response.send_message(embed=embed)
             return
 
-        # TODO: remove test override
-        is_hibiscus = interaction.user.id == 840870799064956930 or random.random() < 0.001
+        is_hibiscus = random.random() < 0.001
         color = _HIBISCUS if is_hibiscus else random.choice(_COLORS[:-1])
 
         standard = [(num, r, p, n) for num, (_, r, p, n, _d, ex) in enumerate(items, start=1) if not ex]
@@ -63,6 +62,6 @@ async def register(bot):
         if is_hibiscus:
             _mark_found(interaction.user.id, interaction.guild.id, "l_hibiscus")
             await interaction.followup.send(
-                "🌺 Tu as débloqué un nouveau trophée secret. Utilise `/discoveries` pour le voir.",
+                "🌺 Ta boutique prend la couleur de l'hibiscus. Tu as débloqué un nouveau trophée secret. Utilise `/discoveries` pour le voir.",
                 ephemeral=True
             )
