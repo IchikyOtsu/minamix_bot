@@ -24,7 +24,7 @@ async def register(bot):
         if count == 0:
             embed = discord.Embed(
                 title="🔍 Découvertes",
-                description="Tu n'as encore rien trouvé. Il y a des secrets cachés quelque part...",
+                description="Tu n'as encore rien trouvé. Il y a des secrets cachés quelque part...\n\n*0/{total} trouvé(s)*\n-# Pour plus d'indices va voir L'Hibiscus.".format(total=total),
                 color=discord.Color.dark_grey()
             )
             set_bot_footer(embed, interaction)
