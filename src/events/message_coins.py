@@ -21,8 +21,10 @@ async def register(bot):
 
         if bot.user in message.mentions:
             from datetime import datetime
+            from src.utils.reactions import _mark_found
             now_time = datetime.now().time()
-            if now_time.hour == 0 and now_time.minute < 10:
+            if 1 <= now_time.hour < 5:
+                _mark_found(message.author.id, "l_insomniaque")
                 await message.reply("T'as vraiment que ça à faire à cette heure-ci ?")
             else:
                 await message.reply("Tu veux quoi toi ?")
