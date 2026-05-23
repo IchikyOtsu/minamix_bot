@@ -1,6 +1,6 @@
 # MinamixBot
 
-A Discord bot with an economy system, shop, moderation tools, and hidden easter eggs.
+A Discord bot with an economy system, shop, moderation tools, ...
 
 ## Requirements
 
