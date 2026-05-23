@@ -1,6 +1,6 @@
 from discord import Interaction, Embed
 import discord
-from src.utils.db import get_db_connection
+from src.utils.shop import get_shop_items
 from src.utils.format import format_amount
 from src.utils.embed import set_bot_footer
 
@@ -11,12 +11,7 @@ async def register(bot):
         description="Affiche la boutique des rôles disponibles."
     )
     async def boutique(interaction: Interaction):
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute("SELECT role_id, prix, nom, exclusif FROM boutique_roles ORDER BY id")
-        items = cursor.fetchall()
-        cursor.close()
-        db.close()
+        items = get_shop_items()
 
         if not items:
             embed = discord.Embed(
@@ -28,8 +23,8 @@ async def register(bot):
             await interaction.response.send_message(embed=embed)
             return
 
-        standard = [(num, r, p, n) for num, (r, p, n, ex) in enumerate(items, start=1) if not ex]
-        exclusifs = [(num, r, p, n) for num, (r, p, n, ex) in enumerate(items, start=1) if ex]
+        standard = [(num, r, p, n) for num, (_, r, p, n, _d, ex) in enumerate(items, start=1) if not ex]
+        exclusifs = [(num, r, p, n) for num, (_, r, p, n, _d, ex) in enumerate(items, start=1) if ex]
 
         lines = []
         for num, role_id, prix, nom in standard:

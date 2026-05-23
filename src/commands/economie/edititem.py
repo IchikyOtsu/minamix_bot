@@ -1,5 +1,6 @@
 from discord import Interaction, app_commands
 import discord
+from src.utils.shop import get_shop_items
 from src.utils.db import get_db_connection
 from src.utils.embed import set_bot_footer
 from src.utils.format import format_amount
@@ -35,14 +36,9 @@ async def register(bot):
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute("SELECT id, role_id, prix, nom, description, exclusif FROM boutique_roles ORDER BY id")
-        items = cursor.fetchall()
+        items = get_shop_items()
 
         if numero < 1 or numero > len(items):
-            cursor.close()
-            db.close()
             embed = discord.Embed(
                 title="❌ Numéro invalide",
                 description=f"Il n'y a que **{len(items)}** article(s) dans la boutique.",
@@ -62,8 +58,6 @@ async def register(bot):
             )
             set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
-            cursor.close()
-            db.close()
             return
 
         new_prix = prix if prix is not None else old_prix
@@ -75,10 +69,10 @@ async def register(bot):
             embed = discord.Embed(title="💢 Prix invalide", description="Le prix doit être supérieur à 0.", color=discord.Color.red())
             set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
-            cursor.close()
-            db.close()
             return
 
+        db = get_db_connection()
+        cursor = db.cursor()
         cursor.execute(
             "UPDATE boutique_roles SET prix = %s, nom = %s, description = %s, exclusif = %s WHERE id = %s",
             (new_prix, new_nom, new_desc, new_excl, actual_id)

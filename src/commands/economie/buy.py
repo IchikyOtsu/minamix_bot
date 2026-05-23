@@ -10,13 +10,8 @@ from src.utils.views import ExpiringView
 
 
 def _get_items():
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("SELECT id, role_id, prix, nom FROM boutique_roles ORDER BY id")
-    items = cursor.fetchall()
-    cursor.close()
-    db.close()
-    return items
+    from src.utils.shop import get_shop_items
+    return get_shop_items()
 
 
 async def _process_purchase(interaction: Interaction, role_id: int, prix: int, nom_role: str):
@@ -126,7 +121,7 @@ async def register(bot):
                 set_bot_footer(embed, interaction)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 return
-            _, role_id, prix, nom_role = items[numero - 1]
+            _, role_id, prix, nom_role, *__ = items[numero - 1]
             await _show_confirmation(interaction, role_id, prix, nom_role, edit=False)
             return
 
@@ -143,7 +138,7 @@ async def register(bot):
 
         async def callback(inter: Interaction):
             num = int(select.values[0])
-            _, role_id, prix, nom_role = items[num - 1]
+            _, role_id, prix, nom_role, *__ = items[num - 1]
             await _show_confirmation(inter, role_id, prix, nom_role, edit=True)
 
         select.callback = callback

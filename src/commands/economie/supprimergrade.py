@@ -1,7 +1,7 @@
 from discord import Interaction, app_commands
 from discord.ui import Button
 import discord
-from src.utils.db import get_db_connection
+from src.utils.shop import get_shop_items
 from src.utils.embed import set_bot_footer
 from src.utils.views import ExpiringView
 
@@ -23,12 +23,7 @@ async def register(bot):
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute("SELECT id, role_id, nom FROM boutique_roles ORDER BY id")
-        items = cursor.fetchall()
-        cursor.close()
-        db.close()
+        items = get_shop_items()
 
         if numero < 1 or numero > len(items):
             embed = discord.Embed(
@@ -40,7 +35,7 @@ async def register(bot):
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        actual_id, role_id, role_name = items[numero - 1]
+        actual_id, role_id, _prix, role_name, *__ = items[numero - 1]
 
         embed = discord.Embed(
             title="🗑️ Confirmer la suppression ?",
