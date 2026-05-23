@@ -28,7 +28,7 @@ async def register(bot):
             return
 
         content = message.content.strip()
-        if "gg" in content.lower():
+        if content.lower() == "gg":
             await message.add_reaction("🏆")
         if content.lower() == "ok":
             await message.add_reaction("👍")
