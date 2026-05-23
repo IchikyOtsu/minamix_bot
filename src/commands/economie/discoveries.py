@@ -34,7 +34,7 @@ async def register(bot):
         lines = []
         for key, name in EGGS.items():
             if key in found_keys:
-                lines.append(f"✅ **{name}**")
+                lines.append(f"🏆 **{name}**")
 
         embed = discord.Embed(
             title="🔍 Découvertes",
