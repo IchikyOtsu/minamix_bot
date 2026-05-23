@@ -34,6 +34,7 @@ async def _main():
 
     intents = discord.Intents.default()
     intents.message_content = True
+    intents.members = True
     bot = commands.Bot(command_prefix="!", intents=intents)
 
     async def guild_only(interaction: discord.Interaction) -> bool:
