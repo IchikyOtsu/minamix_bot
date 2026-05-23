@@ -19,6 +19,12 @@ _ADMIN = (
     "`/removeitem <numéro>` — Supprimer un article de la boutique"
 )
 
+_MODERATION = (
+    "`/setlogs <channel>` — Définir le channel de logs\n"
+    "`/addantispam <channel>` — Ajouter un channel anti-spam (ban instantané)\n"
+    "`/removeantispam <channel>` — Retirer un channel du mode anti-spam"
+)
+
 async def register(bot):
     @bot.tree.command(name="help", description="Affiche les commandes du bot.")
     async def help(interaction: Interaction):
@@ -31,14 +37,20 @@ async def register(bot):
             options.append(
                 discord.SelectOption(label="Administration", value="admin", description="Commandes admin", emoji="🔒")
             )
+            options.append(
+                discord.SelectOption(label="Modération", value="moderation", description="Commandes de modération", emoji="🛡️")
+            )
 
         select = Select(placeholder="Choisir une catégorie...", options=options)
 
         async def callback(inter: Interaction):
-            if select.values[0] == "economy":
+            val = select.values[0]
+            if val == "economy":
                 embed = discord.Embed(title="💰 Économie", description=_ECONOMY, color=discord.Color.gold())
-            else:
+            elif val == "admin":
                 embed = discord.Embed(title="🔒 Administration", description=_ADMIN, color=discord.Color.red())
+            else:
+                embed = discord.Embed(title="🛡️ Modération", description=_MODERATION, color=discord.Color.blurple())
             set_bot_footer(embed, inter)
             await inter.response.send_message(embed=embed, ephemeral=True)
 

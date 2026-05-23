@@ -10,8 +10,8 @@ COOLDOWN = 60
 
 
 async def register(bot):
-    @bot.event
-    async def on_message(message: Message):
+    @bot.listen("on_message")
+    async def on_message_coins(message: Message):
         if message.author.bot:
             return
 
