@@ -3,6 +3,7 @@ import random
 import discord
 from discord import Message
 from src.utils.wallet import modify_user_balance
+from src.utils.reactions import handle as _react
 from src.config import GUILD_IDS
 
 _last_gain: dict[int, float] = {}
@@ -27,18 +28,7 @@ async def register(bot):
                 await message.reply("Tu veux quoi toi ?")
             return
 
-        content = message.content.strip()
-        if content.lower() == "gg":
-            await message.add_reaction("🏆")
-        if content.lower() == "ok":
-            await message.add_reaction("👍")
-        if len(content) == 1:
-            await message.add_reaction("🤏")
-        if content.lower() == "un anneau":
-            import os
-            asset = os.path.join(os.path.dirname(__file__), "..", "assets", "one_bot.jpg")
-            if os.path.exists(asset):
-                await message.reply(file=discord.File(asset))
+        await _react(message)
 
         now = time.time()
         if now - _last_gain.get(message.author.id, 0) < COOLDOWN:
