@@ -35,10 +35,14 @@ async def register(bot):
         for key, name in EGGS.items():
             if key in found_keys:
                 lines.append(f"🏆 **{name}**")
+                lines.append("")
+
+        lines.append(f"*{count}/{total} trouvé(s)*")
+        lines.append("-# Pour plus d'indices va voir L'Hibiscus.")
 
         embed = discord.Embed(
             title="🔍 Découvertes",
-            description="\n".join(lines) + f"\n\n*{count}/{total} trouvé(s)*",
+            description="\n".join(lines),
             color=discord.Color.gold()
         )
         set_bot_footer(embed, interaction)
