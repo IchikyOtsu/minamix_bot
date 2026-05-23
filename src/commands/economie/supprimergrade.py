@@ -2,6 +2,7 @@ from discord import Interaction, app_commands
 from discord.ui import Button
 import discord
 from src.utils.shop import get_shop_items
+from src.utils.db import get_db_connection
 from src.utils.embed import set_bot_footer
 from src.utils.views import ExpiringView
 

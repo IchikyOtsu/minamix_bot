@@ -131,7 +131,7 @@ async def register(bot):
                 value=str(num),
                 description=f"{format_amount(prix)}💰"
             )
-            for num, (_, role_id, prix, nom) in enumerate(items, start=1)
+            for num, (_, role_id, prix, nom, *__) in enumerate(items, start=1)
         ][:25]
 
         select = Select(placeholder="Choisis un article...", options=options)
