@@ -13,13 +13,13 @@ EGGS = {
 }
 
 
-def _mark_found(user_id: int, guild_id: int, key: str) -> None:
+def _mark_found(user_id: int, key: str) -> None:
     try:
         db = get_db_connection()
         cursor = db.cursor()
         cursor.execute(
-            "INSERT IGNORE INTO discoveries (user_id, guild_id, egg_key) VALUES (%s, %s, %s)",
-            (user_id, guild_id, key)
+            "INSERT IGNORE INTO discoveries (user_id, egg_key) VALUES (%s, %s)",
+            (user_id, key)
         )
         db.commit()
         cursor.close()
@@ -36,18 +36,18 @@ async def handle(message: Message) -> None:
 
     if low == "gg":
         await message.add_reaction("🏆")
-        _mark_found(uid, gid, "champion")
+        _mark_found(uid, "champion")
 
     if low == "ok":
         await message.add_reaction("👍")
-        _mark_found(uid, gid, "l_accord")
+        _mark_found(uid, "l_accord")
 
     if len(content) == 1:
         await message.add_reaction("🤏")
-        _mark_found(uid, gid, "l_essentiel")
+        _mark_found(uid, "l_essentiel")
 
     if low == "un anneau":
         asset = os.path.join(os.path.dirname(__file__), "..", "assets", "one_bot.jpg")
         if os.path.exists(asset):
             await message.reply(file=discord.File(asset))
-        _mark_found(uid, gid, "le_seigneur")
+        _mark_found(uid, "le_seigneur")

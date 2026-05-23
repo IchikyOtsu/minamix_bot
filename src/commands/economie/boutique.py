@@ -60,7 +60,7 @@ async def register(bot):
         await interaction.response.send_message(embed=embed)
 
         if is_hibiscus:
-            _mark_found(interaction.user.id, interaction.guild.id, "l_hibiscus")
+            _mark_found(interaction.user.id, "l_hibiscus")
             await interaction.followup.send(
                 "🌺 Ta boutique prend la couleur de l'hibiscus. Tu as débloqué un nouveau trophée secret. Utilise `/discoveries` pour le voir.",
                 ephemeral=True

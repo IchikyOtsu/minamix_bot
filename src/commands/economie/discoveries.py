@@ -11,8 +11,8 @@ async def register(bot):
         db = get_db_connection()
         cursor = db.cursor()
         cursor.execute(
-            "SELECT egg_key FROM discoveries WHERE user_id = %s AND guild_id = %s",
-            (interaction.user.id, interaction.guild.id)
+            "SELECT egg_key FROM discoveries WHERE user_id = %s",
+            (interaction.user.id,)
         )
         found_keys = {row[0] for row in cursor.fetchall()}
         cursor.close()
