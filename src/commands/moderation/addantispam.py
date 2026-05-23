@@ -17,7 +17,25 @@ async def register(bot):
         db = get_db_connection()
         cursor = db.cursor()
         cursor.execute(
-            "INSERT IGNORE INTO antispam_channels (guild_id, channel_id) VALUES (%s, %s)",
+            "SELECT 1 FROM antispam_channels WHERE guild_id = %s AND channel_id = %s",
+            (interaction.guild.id, channel.id)
+        )
+        already = cursor.fetchone()
+
+        if already:
+            cursor.close()
+            db.close()
+            embed = discord.Embed(
+                title="⚠️ Déjà en anti-spam",
+                description=f"{channel.mention} est déjà en mode anti-spam.",
+                color=discord.Color.orange()
+            )
+            set_bot_footer(embed, interaction)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        cursor.execute(
+            "INSERT INTO antispam_channels (guild_id, channel_id) VALUES (%s, %s)",
             (interaction.guild.id, channel.id)
         )
         db.commit()
