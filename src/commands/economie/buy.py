@@ -15,6 +15,8 @@ def _get_items():
 
 
 async def _process_purchase(interaction: Interaction, role_id: int, prix: int, nom_role: str):
+    await interaction.response.defer()
+
     db = get_db_connection()
     user_id = interaction.user.id
     current_balance = await get_user_balance(db, user_id)
@@ -26,7 +28,7 @@ async def _process_purchase(interaction: Interaction, role_id: int, prix: int, n
             color=discord.Color.red()
         )
         set_bot_footer(embed, interaction)
-        await interaction.response.edit_message(embed=embed, view=None)
+        await interaction.edit_original_response(embed=embed, view=None)
         db.close()
         return
 
@@ -35,7 +37,7 @@ async def _process_purchase(interaction: Interaction, role_id: int, prix: int, n
     except Exception:
         embed = Embed(title="❌ Erreur", description="Une erreur est survenue lors du paiement.", color=discord.Color.red())
         set_bot_footer(embed, interaction)
-        await interaction.response.edit_message(embed=embed, view=None)
+        await interaction.edit_original_response(embed=embed, view=None)
         db.close()
         return
 
@@ -63,7 +65,7 @@ async def _process_purchase(interaction: Interaction, role_id: int, prix: int, n
         )
 
     set_bot_footer(embed, interaction)
-    await interaction.response.edit_message(embed=embed, view=None)
+    await interaction.edit_original_response(embed=embed, view=None)
     db.close()
 
 
