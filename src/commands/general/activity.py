@@ -6,9 +6,14 @@ from src.utils.embed import set_bot_footer
 
 
 async def register(bot):
-    @bot.tree.command(name="activity", description="Voir l'activité d'un membre.")
+    @bot.tree.command(name="activity", description="Voir l'activité d'un membre (Admin seulement).")
     @app_commands.describe(user="Membre à consulter")
     async def activity(interaction: Interaction, user: Member):
+        if not interaction.user.guild_permissions.administrator:
+            embed = discord.Embed(title="❌ Permission refusée", color=discord.Color.red())
+            set_bot_footer(embed, interaction)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
         await interaction.response.defer()
 
         db = get_db_connection()

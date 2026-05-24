@@ -7,7 +7,6 @@ from src.utils.views import ExpiringView
 _GENERAL = (
     "`/afk` — Définir ton statut absent (raison + période)\n"
     "`/back` — Annuler ton statut absent\n"
-    "`/activity <user>` — Voir l'activité d'un membre\n"
     "`/status` — Voir le statut et les infos du bot"
 )
 
@@ -32,6 +31,8 @@ _ADMIN = (
 _MODERATION = (
     "`/setlogs <channel>` — Définir le channel de logs\n"
     "`/setafklogs <channel>` — Définir le channel de logs des absences\n"
+    "`/absents` — Liste des membres absents par ordre de date\n"
+    "`/activity <user>` — Voir l'activité d'un membre\n"
     "`/addantispam <channel>` — Ajouter un channel anti-spam (ban instantané)\n"
     "`/removeantispam <channel>` — Retirer un channel du mode anti-spam\n"
     "`/listantispam` — Lister les channels anti-spam actifs\n"
