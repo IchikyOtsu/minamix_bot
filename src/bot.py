@@ -48,6 +48,12 @@ async def _main():
     bot.tree.interaction_check = guild_only
 
     @bot.event
+    async def on_message(message: discord.Message):
+        if message.guild is None or message.guild.id not in GUILD_IDS:
+            return
+        await bot.process_commands(message)
+
+    @bot.event
     async def on_ready():
         print(f"Connecté : {bot.user}")
         try:

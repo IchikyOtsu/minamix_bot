@@ -2,6 +2,7 @@ import discord
 from discord import Message
 from src.utils.db import get_db_connection
 from src.utils.embed import set_bot_footer
+from src.config import GUILD_IDS
 
 
 async def register(bot):
@@ -9,7 +10,7 @@ async def register(bot):
     async def on_message_antispam(message: Message):
         if message.author.bot:
             return
-        if message.guild is None:
+        if message.guild is None or message.guild.id not in GUILD_IDS:
             return
 
         db = get_db_connection()
