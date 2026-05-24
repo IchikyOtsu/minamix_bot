@@ -31,6 +31,10 @@ _ADMIN = (
 _MODERATION = (
     "`/setlogs <channel>` — Définir le channel de logs\n"
     "`/setafklogs <channel>` — Définir le channel de logs des absences\n"
+    "`/setwarnlogs <channel>` — Définir le channel de logs des warns\n"
+    "`/warn <user> <raison>` — Avertir un membre\n"
+    "`/warnings <user>` — Voir l'historique des warns d'un membre\n"
+    "`/delwarn <user> <numéro>` — Supprimer un avertissement\n"
     "`/absents` — Liste des membres absents par ordre de date\n"
     "`/activity <user>` — Voir l'activité d'un membre\n"
     "`/addantispam <channel>` — Ajouter un channel anti-spam (ban instantané)\n"

@@ -9,6 +9,10 @@ _reminded: dict[int, float] = {}
 REMIND_COOLDOWN = 3600
 _bot = None
 
+# (guild_id, mentioner_id, afk_user_id) -> mention count during this absence
+_mention_counts: dict[tuple, int] = {}
+AFK_WARN_THRESHOLD = 3
+
 
 async def send_afk_log(bot, guild_id: int, embed: discord.Embed) -> None:
     db = get_db_connection()
@@ -59,6 +63,11 @@ async def remove_afk(member: discord.Member, guild: discord.Guild) -> None:
     cursor.close()
     db.close()
     _reminded.pop(member.id, None)
+
+    # Clear mention counts for this user across all mentioners
+    keys_to_delete = [k for k in _mention_counts if k[2] == member.id and k[0] == guild.id]
+    for k in keys_to_delete:
+        del _mention_counts[k]
 
 
 async def register(bot):
@@ -149,3 +158,19 @@ async def register(bot):
                 + "\n".join(lines),
                 mention_author=False
             )
+
+            # Track mentions and auto-warn if threshold exceeded
+            from src.utils.warn import issue_warn
+            for afk_member, _ in afk_users:
+                key = (message.guild.id, message.author.id, afk_member.id)
+                _mention_counts[key] = _mention_counts.get(key, 0) + 1
+                if _mention_counts[key] >= AFK_WARN_THRESHOLD:
+                    mentioner = message.guild.get_member(message.author.id)
+                    if mentioner:
+                        await issue_warn(
+                            _bot,
+                            message.guild,
+                            mentioner,
+                            _bot.user,
+                            f"Mentions répétées de {afk_member.display_name} durant son absence."
+                        )
