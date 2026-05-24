@@ -4,6 +4,12 @@ import discord
 from src.utils.embed import set_bot_footer
 from src.utils.views import ExpiringView
 
+_GENERAL = (
+    "`/afk` — Définir ton statut absent (ouvre un formulaire)\n"
+    "`/back` — Annuler ton statut absent\n"
+    "`/status` — Voir le statut et les infos du bot"
+)
+
 _ECONOMY = (
     "`/balance` — Voir votre solde\n"
     "`/work` — Gagner des coins (cooldown : 1 semaine)\n"
@@ -37,6 +43,7 @@ async def register(bot):
         is_admin = interaction.user.guild_permissions.administrator
 
         options = [
+            discord.SelectOption(label="Général", value="general", description="Commandes générales", emoji="🌐"),
             discord.SelectOption(label="Économie", value="economy", description="Commandes d'économie", emoji="💰"),
         ]
         if is_admin:
@@ -51,7 +58,9 @@ async def register(bot):
 
         async def callback(inter: Interaction):
             val = select.values[0]
-            if val == "economy":
+            if val == "general":
+                embed = discord.Embed(title="🌐 Général", description=_GENERAL, color=discord.Color.blurple())
+            elif val == "economy":
                 embed = discord.Embed(title="💰 Économie", description=_ECONOMY, color=discord.Color.gold())
             elif val == "admin":
                 embed = discord.Embed(title="🔒 Administration", description=_ADMIN, color=discord.Color.red())
