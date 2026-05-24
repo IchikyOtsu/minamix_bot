@@ -8,6 +8,11 @@ _COLUMN_MIGRATIONS = [
         "exclusif",
         "ALTER TABLE boutique_roles ADD COLUMN exclusif TINYINT(1) NOT NULL DEFAULT 0",
     ),
+    (
+        "users",
+        "last_seen",
+        "ALTER TABLE users ADD COLUMN last_seen TIMESTAMP NULL",
+    ),
 ]
 
 

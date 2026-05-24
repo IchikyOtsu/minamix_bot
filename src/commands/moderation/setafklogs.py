@@ -1,0 +1,34 @@
+from discord import Interaction, TextChannel, app_commands
+import discord
+from src.utils.db import get_db_connection
+from src.utils.embed import set_bot_footer
+
+
+async def register(bot):
+    @bot.tree.command(name="setafklogs", description="Définir le channel de logs des absences (Admin seulement)")
+    @app_commands.describe(channel="Channel où envoyer les logs d'absence")
+    async def setafklogs(interaction: Interaction, channel: TextChannel):
+        if not interaction.user.guild_permissions.administrator:
+            embed = discord.Embed(title="❌ Permission refusée", color=discord.Color.red())
+            set_bot_footer(embed, interaction)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute(
+            "INSERT INTO guild_config (guild_id, config_key, value) VALUES (%s, 'afk_logs_channel', %s) "
+            "ON DUPLICATE KEY UPDATE value = %s",
+            (interaction.guild.id, str(channel.id), str(channel.id))
+        )
+        db.commit()
+        cursor.close()
+        db.close()
+
+        embed = discord.Embed(
+            title="✅ Channel de logs AFK défini",
+            description=f"Les absences seront loggées dans {channel.mention}.",
+            color=discord.Color.green()
+        )
+        set_bot_footer(embed, interaction)
+        await interaction.response.send_message(embed=embed, ephemeral=True)

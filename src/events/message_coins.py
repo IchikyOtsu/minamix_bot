@@ -7,7 +7,9 @@ from src.utils.reactions import handle as _react
 from src.config import GUILD_IDS
 
 _last_gain: dict[int, float] = {}
+_last_seen_update: dict[int, float] = {}
 COOLDOWN = 60
+SEEN_DEBOUNCE = 300
 
 
 async def register(bot):
@@ -33,6 +35,25 @@ async def register(bot):
         await _react(message)
 
         now = time.time()
+
+        # Update last_seen (debounced every 5 min)
+        if now - _last_seen_update.get(message.author.id, 0) >= SEEN_DEBOUNCE:
+            _last_seen_update[message.author.id] = now
+            try:
+                from src.utils.db import get_db_connection
+                db = get_db_connection()
+                cursor = db.cursor()
+                cursor.execute(
+                    "INSERT INTO users (user_id, last_seen) VALUES (%s, NOW()) "
+                    "ON DUPLICATE KEY UPDATE last_seen = NOW()",
+                    (message.author.id,)
+                )
+                db.commit()
+                cursor.close()
+                db.close()
+            except Exception:
+                pass
+
         if now - _last_gain.get(message.author.id, 0) < COOLDOWN:
             await bot.process_commands(message)
             return

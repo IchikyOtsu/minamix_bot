@@ -5,9 +5,26 @@ from src.utils.db import get_db_connection
 from src.utils.views import ExpiringView
 from src.config import GUILD_IDS
 
-# user_id → timestamp of last "are you back?" prompt (1h cooldown)
 _reminded: dict[int, float] = {}
 REMIND_COOLDOWN = 3600
+_bot = None
+
+
+async def send_afk_log(bot, guild_id: int, embed: discord.Embed) -> None:
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT value FROM guild_config WHERE guild_id = %s AND config_key = 'afk_logs_channel'",
+        (guild_id,)
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    db.close()
+    if not row:
+        return
+    channel = bot.get_channel(int(row[0]))
+    if channel:
+        await channel.send(embed=embed)
 
 
 async def remove_afk(member: discord.Member, guild: discord.Guild) -> None:
@@ -29,12 +46,25 @@ async def remove_afk(member: discord.Member, guild: discord.Guild) -> None:
             await member.edit(nick=original_nick if original_nick != member.name else None)
         except discord.Forbidden:
             pass
+
+        if _bot:
+            log_embed = discord.Embed(
+                title="👋 Retour d'absence",
+                description=f"{member.mention} est de retour.",
+                color=discord.Color.green()
+            )
+            log_embed.set_thumbnail(url=member.display_avatar.url)
+            await send_afk_log(_bot, guild.id, log_embed)
+
     cursor.close()
     db.close()
     _reminded.pop(member.id, None)
 
 
 async def register(bot):
+    global _bot
+    _bot = bot
+
     @bot.listen("on_message")
     async def on_message_afk(message: Message):
         if message.author.bot:
@@ -45,7 +75,7 @@ async def register(bot):
         db = get_db_connection()
         cursor = db.cursor()
 
-        # Check if the author is AFK
+        # Check if author is AFK
         cursor.execute(
             "SELECT reason FROM afk_users WHERE user_id = %s AND guild_id = %s",
             (message.author.id, message.guild.id)
@@ -60,21 +90,19 @@ async def register(bot):
 
                 view = ExpiringView(timeout=60)
                 yes_btn = discord.ui.Button(label="Oui, je suis de retour", style=discord.ButtonStyle.green, emoji="👋")
-                no_btn = discord.ui.Button(label="Non, je suis encore absent", style=discord.ButtonStyle.grey, emoji="💤")
+                no_btn = discord.ui.Button(label="Non, encore absent(e)", style=discord.ButtonStyle.grey, emoji="💤")
 
                 async def yes_callback(inter: discord.Interaction):
+                    await inter.response.defer()
+                    await inter.message.delete()
                     await remove_afk(inter.user, inter.guild)
-                    await inter.response.edit_message(
-                        content="👋 Bienvenue de retour ! Ton statut absent a été annulé.",
-                        view=None
-                    )
+                    await inter.followup.send("👋 Bienvenue de retour ! Ton statut absent a été annulé.", ephemeral=True)
 
                 async def no_callback(inter: discord.Interaction):
                     _reminded[inter.user.id] = time.time()
-                    await inter.response.edit_message(
-                        content="💤 Ok, ton statut absent est maintenu.",
-                        view=None
-                    )
+                    await inter.response.defer()
+                    await inter.message.delete()
+                    await inter.followup.send("💤 Ok, ton statut absent est maintenu.", ephemeral=True)
 
                 yes_btn.callback = yes_callback
                 no_btn.callback = no_callback
@@ -114,8 +142,9 @@ async def register(bot):
 
         if afk_users:
             lines = [f"• {m.display_name} — *{r}*" for m, r in afk_users]
+            count = len(afk_users)
             await message.reply(
-                f"{'Cette personne est absente' if len(afk_users) == 1 else 'Ces personnes sont absentes'} "
+                f"{'Cette personne est absente' if count == 1 else 'Ces personnes sont absentes'} "
                 f"et ne peut pas te répondre pour le moment. Merci de ne pas les mentionner inutilement.\n"
                 + "\n".join(lines),
                 mention_author=False

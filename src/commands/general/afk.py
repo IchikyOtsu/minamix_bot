@@ -3,14 +3,26 @@ from discord import Interaction
 from datetime import datetime
 from src.utils.db import get_db_connection
 from src.utils.embed import set_bot_footer
+from src.utils.views import ExpiringView
+
+_REASONS = [
+    ("Santé", "🏥"),
+    ("Famille", "👨‍👩‍👧"),
+    ("Voyage", "✈️"),
+    ("Travail / Études", "💼"),
+    ("Repos", "😴"),
+    ("Urgence", "🚨"),
+    ("Indisponible", "🔕"),
+    ("Ne vous regarde pas", "🔒"),
+]
 
 
-class _AfkModal(discord.ui.Modal, title="Définir mon statut absent"):
-    reason = discord.ui.TextInput(
-        label="Raison (reste vague si tu veux)",
-        placeholder="Santé · Famille · Voyage · Travail · Repos · Études · Ne vous regarde pas",
-        required=True,
-        max_length=100,
+class _AfkDatesModal(discord.ui.Modal, title="Définir la période d'absence"):
+    start_time = discord.ui.TextInput(
+        label="Début de l'absence",
+        placeholder="JJ/MM/AAAA HH:MM — laisser vide = maintenant",
+        required=False,
+        max_length=16,
     )
     end_time = discord.ui.TextInput(
         label="Fin de l'absence (optionnel)",
@@ -19,18 +31,37 @@ class _AfkModal(discord.ui.Modal, title="Définir mon statut absent"):
         max_length=16,
     )
 
-    async def on_submit(self, interaction: Interaction):
-        reason = self.reason.value.strip()
-        end_time = None
+    def __init__(self, reason: str):
+        super().__init__()
+        self.reason = reason
 
+    async def on_submit(self, interaction: Interaction):
+        start = None
+        end = None
+
+        raw_start = self.start_time.value.strip()
         raw_end = self.end_time.value.strip()
-        if raw_end:
+
+        if raw_start:
             try:
-                end_time = datetime.strptime(raw_end, "%d/%m/%Y %H:%M")
+                start = datetime.strptime(raw_start, "%d/%m/%Y %H:%M")
             except ValueError:
                 embed = discord.Embed(
-                    title="❌ Format de date invalide",
-                    description="Utilise le format `JJ/MM/AAAA HH:MM` (ex: `25/12/2025 18:00`).",
+                    title="❌ Format invalide",
+                    description="Format attendu : `JJ/MM/AAAA HH:MM` (ex: `25/12/2025 18:00`).",
+                    color=discord.Color.red()
+                )
+                set_bot_footer(embed, interaction)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
+
+        if raw_end:
+            try:
+                end = datetime.strptime(raw_end, "%d/%m/%Y %H:%M")
+            except ValueError:
+                embed = discord.Embed(
+                    title="❌ Format invalide",
+                    description="Format attendu : `JJ/MM/AAAA HH:MM` (ex: `25/12/2025 18:00`).",
                     color=discord.Color.red()
                 )
                 set_bot_footer(embed, interaction)
@@ -52,27 +83,63 @@ class _AfkModal(discord.ui.Modal, title="Définir mon statut absent"):
         db = get_db_connection()
         cursor = db.cursor()
         cursor.execute(
-            "INSERT INTO afk_users (user_id, guild_id, original_nick, reason, end_time) "
-            "VALUES (%s, %s, %s, %s, %s) "
-            "ON DUPLICATE KEY UPDATE reason = %s, original_nick = %s, end_time = %s, start_time = NOW()",
-            (member.id, interaction.guild.id, original_nick, reason, end_time,
-             reason, original_nick, end_time)
+            "INSERT INTO afk_users (user_id, guild_id, original_nick, reason, start_time, end_time) "
+            "VALUES (%s, %s, %s, %s, %s, %s) "
+            "ON DUPLICATE KEY UPDATE reason=%s, original_nick=%s, start_time=%s, end_time=%s",
+            (
+                member.id, interaction.guild.id, original_nick, self.reason,
+                start or datetime.now(), end,
+                self.reason, original_nick, start or datetime.now(), end,
+            )
         )
         db.commit()
         cursor.close()
         db.close()
 
-        end_str = f"<t:{int(end_time.timestamp())}:f>" if end_time else "indéfinie"
+        start_str = f"<t:{int(start.timestamp())}:f>" if start else "maintenant"
+        end_str = f"<t:{int(end.timestamp())}:f>" if end else "indéfinie"
+
         embed = discord.Embed(
             title="💤 Statut absent activé",
-            description=f"Ton absence a été enregistrée.\nFin : {end_str}",
+            description=f"Raison : **{self.reason}**\nDébut : {start_str}\nFin : {end_str}",
             color=discord.Color.greyple()
         )
         set_bot_footer(embed, interaction)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+        # Send to AFK logs
+        from src.events.afk_handler import send_afk_log
+        await send_afk_log(interaction.client, interaction.guild.id, discord.Embed(
+            title="💤 Absence déclarée",
+            description=(
+                f"{member.mention} s'est déclaré(e) absent(e).\n"
+                f"Raison : **{self.reason}**\n"
+                f"Début : {start_str} — Fin : {end_str}"
+            ),
+            color=discord.Color.greyple()
+        ).set_thumbnail(url=member.display_avatar.url))
+
 
 async def register(bot):
     @bot.tree.command(name="afk", description="Définir ton statut absent.")
     async def afk(interaction: Interaction):
-        await interaction.response.send_modal(_AfkModal())
+        options = [
+            discord.SelectOption(label=label, emoji=emoji, value=label)
+            for label, emoji in _REASONS
+        ]
+        select = discord.ui.Select(placeholder="Choisis une raison...", options=options)
+
+        async def callback(inter: Interaction):
+            reason = select.values[0]
+            await inter.response.send_modal(_AfkDatesModal(reason=reason))
+
+        select.callback = callback
+        view = ExpiringView(timeout=60)
+        view.add_item(select)
+
+        await interaction.response.send_message(
+            "Quelle est la raison de ton absence ?",
+            view=view,
+            ephemeral=True
+        )
+        view.message = await interaction.original_response()
