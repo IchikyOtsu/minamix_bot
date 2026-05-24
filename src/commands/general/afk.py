@@ -25,8 +25,8 @@ class _AfkDatesModal(discord.ui.Modal, title="Définir la période d'absence"):
         max_length=16,
     )
     end_time = discord.ui.TextInput(
-        label="Fin de l'absence (optionnel)",
-        placeholder="JJ/MM/AAAA HH:MM — laisser vide = indéfini",
+        label="Fin de l'absence",
+        placeholder="JJ/MM/AAAA HH:MM — laisser vide si indéterminé",
         required=False,
         max_length=16,
     )
