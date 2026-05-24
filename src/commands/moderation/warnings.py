@@ -43,11 +43,11 @@ async def register(bot):
         )
         embed.set_thumbnail(url=user.display_avatar.url)
 
-        for mod_id, reason, created_at in rows[:10]:
+        for num, (mod_id, reason, created_at) in enumerate(rows[:10], start=1):
             mod = interaction.guild.get_member(mod_id)
             mod_name = mod.display_name if mod else f"ID {mod_id}"
             embed.add_field(
-                name=f"<t:{int(created_at.timestamp())}:d> — par {mod_name}",
+                name=f"#{num} — <t:{int(created_at.timestamp())}:d> — par {mod_name}",
                 value=reason,
                 inline=False
             )
