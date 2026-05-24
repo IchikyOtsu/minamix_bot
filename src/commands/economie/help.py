@@ -27,7 +27,8 @@ _MODERATION = (
     "`/addantispam <channel>` — Ajouter un channel anti-spam (ban instantané)\n"
     "`/removeantispam <channel>` — Retirer un channel du mode anti-spam\n"
     "`/listantispam` — Lister les channels anti-spam actifs\n"
-    "`/resetbalances` — Remettre à zéro tous les soldes (triple confirmation)"
+    "`/resetbalances` — Remettre à zéro tous les soldes (triple confirmation)\n"
+    "`/economystats` — Statistiques économiques du serveur"
 )
 
 async def register(bot):
