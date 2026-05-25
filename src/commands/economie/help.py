@@ -33,6 +33,7 @@ _RP = (
     "`/rpedit <user>` — Modifier nom ou préfixe (sélection + modal)\n"
     "`/rpimage <user> <image>` — Changer l'image d'un personnage\n"
     "`/rpdelete <user>` — Supprimer un personnage (sélection)\n"
+    "`/rpbourse [user]` — Voir la bourse Nax d'un personnage\n"
     "`/rplist [user]` — Lister les personnages d'un utilisateur\n"
     "`/setrpchannel <channel>` — Définir le channel d'annonce RP"
 )

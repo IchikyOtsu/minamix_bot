@@ -13,6 +13,11 @@ _COLUMN_MIGRATIONS = [
         "last_seen",
         "ALTER TABLE users ADD COLUMN last_seen TIMESTAMP NULL",
     ),
+    (
+        "rp_characters",
+        "nax_balance",
+        "ALTER TABLE rp_characters ADD COLUMN nax_balance BIGINT NOT NULL DEFAULT 0",
+    ),
 ]
 
 
