@@ -29,6 +29,7 @@ _ADMIN = (
 )
 
 _RP = (
+    "`/roll <expression>` — Lancer des dés (`/roll help` pour la syntaxe)\n"
     "`/rpcreate <user> <name> <prefix> <image>` — Créer un personnage RP\n"
     "`/rpedit <user>` — Modifier nom ou préfixe (sélection + modal)\n"
     "`/rpimage <user> <image>` — Changer l'image d'un personnage\n"
