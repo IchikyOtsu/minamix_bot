@@ -10,11 +10,11 @@ NAX_ICON = "src/assets/nax.png"
 
 def _build_embed(char_name: str, balance: int, owner: discord.Member) -> discord.Embed:
     embed = discord.Embed(
-        title=f"💰 Bourse de {char_name}",
-        description=f"**{balance:,} Nax**".replace(",", " "),
+        title=f"Bourse de {char_name}",
+        description=f"**{balance:,}**".replace(",", " "),
         color=discord.Color.from_rgb(230, 180, 150),
     )
-    embed.set_thumbnail(url="attachment://nax.png")
+    embed.set_author(name="Nax", icon_url="attachment://nax.png")
     embed.set_footer(text=f"Personnage de {owner.display_name}")
     return embed
 
