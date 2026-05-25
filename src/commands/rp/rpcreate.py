@@ -11,17 +11,27 @@ async def register(bot):
         user="Utilisateur propriétaire du personnage",
         name="Nom du personnage",
         prefix="Préfixe pour faire parler le personnage (ex: Aria:)",
-        image_url="URL de l'image du personnage",
+        image="Image du personnage (fichier)",
     )
     async def rpcreate(
         interaction: Interaction,
         user: Member,
         name: str,
         prefix: str,
-        image_url: str,
+        image: discord.Attachment,
     ):
         if not has_rp_permission(interaction.user):
             embed = discord.Embed(title="❌ Permission refusée", color=discord.Color.red())
+            set_bot_footer(embed, interaction)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        if not image.content_type or not image.content_type.startswith("image/"):
+            embed = discord.Embed(
+                title="❌ Fichier invalide",
+                description="Le fichier joint doit être une image.",
+                color=discord.Color.red()
+            )
             set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
@@ -39,13 +49,25 @@ async def register(bot):
 
         await interaction.response.defer(ephemeral=True)
 
+        rp_channel = await _get_rp_channel(bot, interaction.guild.id) or interaction.channel
+
+        # Post character sheet with the image file to get a stable CDN URL
+        file = await image.to_file()
+        sheet_embed = discord.Embed(title=name, color=discord.Color.blurple())
+        sheet_embed.set_image(url=f"attachment://{image.filename}")
+        sheet_embed.add_field(name="Joueur", value=user.mention, inline=True)
+        sheet_embed.add_field(name="Préfixe", value=f"`{prefix}`", inline=True)
+
+        msg = await rp_channel.send(embed=sheet_embed, file=file)
+        stable_url = msg.attachments[0].url if msg.attachments else image.url
+
         db = get_db_connection()
         cursor = db.cursor()
         try:
             cursor.execute(
                 "INSERT INTO rp_characters (guild_id, user_id, name, prefix, image_url) "
                 "VALUES (%s, %s, %s, %s, %s)",
-                (interaction.guild.id, user.id, name, prefix, image_url)
+                (interaction.guild.id, user.id, name, prefix, stable_url)
             )
             db.commit()
             char_id = cursor.lastrowid
@@ -68,15 +90,9 @@ async def register(bot):
         db.close()
         invalidate_cache(interaction.guild.id)
 
-        # Post character sheet in rp_channel (or current channel)
-        rp_channel = await _get_rp_channel(bot, interaction.guild.id) or interaction.channel
-
-        sheet_embed = discord.Embed(title=name, color=discord.Color.blurple())
-        sheet_embed.set_image(url=image_url)
-        sheet_embed.add_field(name="Joueur", value=user.mention, inline=True)
-        sheet_embed.add_field(name="Préfixe", value=f"`{prefix}`", inline=True)
+        # Update footer with char ID
         sheet_embed.set_footer(text=f"ID personnage : {char_id}")
-        await rp_channel.send(embed=sheet_embed)
+        await msg.edit(embed=sheet_embed)
 
         confirm = discord.Embed(
             title="✅ Personnage créé",
