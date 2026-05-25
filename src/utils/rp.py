@@ -1,0 +1,40 @@
+from src.utils.db import get_db_connection
+
+RP_ALLOWED_ROLES = {
+    1437105432291315806,
+    1437105432291315805,
+    1437105432278728784,
+    1507492860956774633,
+}
+
+# guild_id -> {prefix: (char_id, user_id, name, image_url)}
+_prefix_cache: dict[int, dict[str, tuple]] = {}
+
+
+def has_rp_permission(member) -> bool:
+    return any(r.id in RP_ALLOWED_ROLES for r in member.roles)
+
+
+def get_prefix_cache(guild_id: int) -> dict[str, tuple]:
+    if guild_id not in _prefix_cache:
+        _load_cache(guild_id)
+    return _prefix_cache[guild_id]
+
+
+def _load_cache(guild_id: int) -> None:
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT id, user_id, name, image_url, prefix FROM rp_characters WHERE guild_id = %s",
+        (guild_id,)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    db.close()
+    _prefix_cache[guild_id] = {
+        row[4]: (row[0], row[1], row[2], row[3]) for row in rows
+    }
+
+
+def invalidate_cache(guild_id: int) -> None:
+    _prefix_cache.pop(guild_id, None)

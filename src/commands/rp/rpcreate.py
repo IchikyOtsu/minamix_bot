@@ -1,0 +1,102 @@
+import discord
+from discord import Interaction, Member, app_commands
+from src.utils.db import get_db_connection
+from src.utils.embed import set_bot_footer
+from src.utils.rp import has_rp_permission, invalidate_cache
+
+
+async def register(bot):
+    @bot.tree.command(name="rpcreate", description="Créer un personnage RP pour un utilisateur")
+    @app_commands.describe(
+        user="Utilisateur propriétaire du personnage",
+        name="Nom du personnage",
+        prefix="Préfixe pour faire parler le personnage (ex: Aria:)",
+        image_url="URL de l'image du personnage",
+    )
+    async def rpcreate(
+        interaction: Interaction,
+        user: Member,
+        name: str,
+        prefix: str,
+        image_url: str,
+    ):
+        if not has_rp_permission(interaction.user):
+            embed = discord.Embed(title="❌ Permission refusée", color=discord.Color.red())
+            set_bot_footer(embed, interaction)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        prefix = prefix.strip()
+        if len(prefix) < 1 or len(prefix) > 20:
+            embed = discord.Embed(
+                title="❌ Préfixe invalide",
+                description="Le préfixe doit faire entre 1 et 20 caractères.",
+                color=discord.Color.red()
+            )
+            set_bot_footer(embed, interaction)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        await interaction.response.defer(ephemeral=True)
+
+        db = get_db_connection()
+        cursor = db.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO rp_characters (guild_id, user_id, name, prefix, image_url) "
+                "VALUES (%s, %s, %s, %s, %s)",
+                (interaction.guild.id, user.id, name, prefix, image_url)
+            )
+            db.commit()
+            char_id = cursor.lastrowid
+        except Exception as e:
+            cursor.close()
+            db.close()
+            if "Duplicate" in str(e):
+                embed = discord.Embed(
+                    title="❌ Préfixe déjà utilisé",
+                    description=f"Le préfixe `{prefix}` est déjà utilisé sur ce serveur.",
+                    color=discord.Color.red()
+                )
+            else:
+                embed = discord.Embed(title="❌ Erreur", description=str(e), color=discord.Color.red())
+            set_bot_footer(embed, interaction)
+            await interaction.edit_original_response(embed=embed)
+            return
+
+        cursor.close()
+        db.close()
+        invalidate_cache(interaction.guild.id)
+
+        # Post character sheet in rp_channel (or current channel)
+        rp_channel = await _get_rp_channel(bot, interaction.guild.id) or interaction.channel
+
+        sheet_embed = discord.Embed(title=name, color=discord.Color.blurple())
+        sheet_embed.set_image(url=image_url)
+        sheet_embed.add_field(name="Joueur", value=user.mention, inline=True)
+        sheet_embed.add_field(name="Préfixe", value=f"`{prefix}`", inline=True)
+        sheet_embed.set_footer(text=f"ID personnage : {char_id}")
+        await rp_channel.send(embed=sheet_embed)
+
+        confirm = discord.Embed(
+            title="✅ Personnage créé",
+            description=f"**{name}** créé pour {user.mention} avec le préfixe `{prefix}`.",
+            color=discord.Color.green()
+        )
+        set_bot_footer(confirm, interaction)
+        await interaction.edit_original_response(embed=confirm)
+
+
+async def _get_rp_channel(bot, guild_id: int):
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT value FROM guild_config WHERE guild_id = %s AND config_key = 'rp_channel'",
+        (guild_id,)
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    db.close()
+    if row:
+        return bot.get_channel(int(row[0]))
+    return None

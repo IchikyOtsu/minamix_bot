@@ -28,6 +28,14 @@ _ADMIN = (
     "`/giveitem <numéro> <user>` — Donner un article à un utilisateur"
 )
 
+_RP = (
+    "`/rpcreate <user> <name> <prefix> <image_url>` — Créer un personnage RP\n"
+    "`/rpedit <prefix> [name] [new_prefix] [image]` — Modifier un personnage\n"
+    "`/rpdelete <prefix>` — Supprimer un personnage\n"
+    "`/rplist [user]` — Lister les personnages d'un utilisateur\n"
+    "`/setrpchannel <channel>` — Définir le channel d'annonce RP"
+)
+
 _MODERATION = (
     "`/setlogs <channel>` — Définir le channel de logs\n"
     "`/setafklogs <channel>` — Définir le channel de logs des absences\n"
@@ -53,6 +61,9 @@ async def register(bot):
             discord.SelectOption(label="Général", value="general", description="Commandes générales", emoji="🌐"),
             discord.SelectOption(label="Économie", value="economy", description="Commandes d'économie", emoji="💰"),
         ]
+        options.append(
+            discord.SelectOption(label="Roleplay", value="rp", description="Commandes RP", emoji="🎭")
+        )
         if is_admin:
             options.append(
                 discord.SelectOption(label="Administration", value="admin", description="Commandes admin", emoji="🔒")
@@ -69,6 +80,8 @@ async def register(bot):
                 embed = discord.Embed(title="🌐 Général", description=_GENERAL, color=discord.Color.blurple())
             elif val == "economy":
                 embed = discord.Embed(title="💰 Économie", description=_ECONOMY, color=discord.Color.gold())
+            elif val == "rp":
+                embed = discord.Embed(title="🎭 Roleplay", description=_RP, color=discord.Color.purple())
             elif val == "admin":
                 embed = discord.Embed(title="🔒 Administration", description=_ADMIN, color=discord.Color.red())
             else:

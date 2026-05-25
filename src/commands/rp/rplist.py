@@ -1,0 +1,48 @@
+import discord
+from discord import Interaction, Member, app_commands
+from src.utils.db import get_db_connection
+from src.utils.embed import set_bot_footer
+
+
+async def register(bot):
+    @bot.tree.command(name="rplist", description="Lister les personnages RP d'un utilisateur")
+    @app_commands.describe(user="Utilisateur (laisse vide pour toi-même)")
+    async def rplist(interaction: Interaction, user: Member = None):
+        target = user or interaction.user
+
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT name, prefix, image_url, created_at FROM rp_characters "
+            "WHERE guild_id = %s AND user_id = %s ORDER BY created_at ASC",
+            (interaction.guild.id, target.id)
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        db.close()
+
+        if not rows:
+            embed = discord.Embed(
+                title=f"🎭 Personnages de {target.display_name}",
+                description="Aucun personnage créé.",
+                color=discord.Color.blurple()
+            )
+            set_bot_footer(embed, interaction)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        embed = discord.Embed(
+            title=f"🎭 Personnages de {target.display_name} ({len(rows)})",
+            color=discord.Color.blurple()
+        )
+        embed.set_thumbnail(url=target.display_avatar.url)
+
+        for name, prefix, image_url, created_at in rows:
+            embed.add_field(
+                name=name,
+                value=f"Préfixe : `{prefix}`\n[Image]({image_url})\nCréé le <t:{int(created_at.timestamp())}:d>",
+                inline=True
+            )
+
+        set_bot_footer(embed, interaction)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
