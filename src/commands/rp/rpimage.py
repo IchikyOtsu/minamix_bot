@@ -8,11 +8,24 @@ from src.utils.views import ExpiringView
 
 
 async def register(bot):
-    @bot.tree.command(name="rpdelete", description="Supprimer un personnage RP")
-    @app_commands.describe(user="Utilisateur propriétaire du personnage")
-    async def rpdelete(interaction: Interaction, user: Member):
+    @bot.tree.command(name="rpimage", description="Changer l'image d'un personnage RP")
+    @app_commands.describe(
+        user="Utilisateur propriétaire du personnage",
+        image="Nouvelle image (fichier)",
+    )
+    async def rpimage(interaction: Interaction, user: Member, image: discord.Attachment):
         if not has_rp_permission(interaction.user):
             embed = discord.Embed(title="❌ Permission refusée", color=discord.Color.red())
+            set_bot_footer(embed, interaction)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        if not image.content_type or not image.content_type.startswith("image/"):
+            embed = discord.Embed(
+                title="❌ Fichier invalide",
+                description="Le fichier joint doit être une image.",
+                color=discord.Color.red()
+            )
             set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
@@ -41,7 +54,7 @@ async def register(bot):
             discord.SelectOption(label=name, value=str(char_id), description=f"Préfixe : {prefix}")
             for char_id, name, prefix in rows
         ]
-        select = Select(placeholder="Choisir un personnage à supprimer...", options=options)
+        select = Select(placeholder="Choisir un personnage...", options=options)
 
         async def on_select(inter: Interaction):
             char_id = int(select.values[0])
@@ -50,33 +63,60 @@ async def register(bot):
                 await inter.response.send_message("❌ Personnage introuvable.", ephemeral=True)
                 return
 
-            _, char_name, char_prefix = char
+            _, char_name, _ = char
+            await inter.response.defer(ephemeral=True)
+
+            rp_channel = await _get_rp_channel(bot, inter.guild.id) or inter.channel
+            file = await image.to_file()
+            msg = await rp_channel.send(
+                content=f"*Mise à jour de l'image de **{char_name}** :*",
+                file=file
+            )
+            stable_url = msg.attachments[0].url if msg.attachments else image.url
 
             db2 = get_db_connection()
             cursor2 = db2.cursor()
-            cursor2.execute("DELETE FROM rp_characters WHERE id = %s", (char_id,))
+            cursor2.execute(
+                "UPDATE rp_characters SET image_url = %s WHERE id = %s",
+                (stable_url, char_id)
+            )
             db2.commit()
             cursor2.close()
             db2.close()
             invalidate_cache(inter.guild.id)
 
             embed = discord.Embed(
-                title="✅ Personnage supprimé",
-                description=f"**{char_name}** (préfixe `{char_prefix}`) appartenant à {user.mention} a été supprimé.",
+                title="✅ Image mise à jour",
+                description=f"L'image de **{char_name}** a été mise à jour.",
                 color=discord.Color.green()
             )
             set_bot_footer(embed, inter)
-            await inter.response.send_message(embed=embed, ephemeral=True)
+            await inter.edit_original_response(embed=embed)
 
         select.callback = on_select
         view = ExpiringView()
         view.add_item(select)
 
         embed = discord.Embed(
-            title=f"🎭 Supprimer un personnage de {user.display_name}",
-            description="Sélectionne le personnage à supprimer.",
-            color=discord.Color.red()
+            title=f"🎭 Changer l'image — {user.display_name}",
+            description="Sélectionne le personnage à mettre à jour.",
+            color=discord.Color.blurple()
         )
         set_bot_footer(embed, interaction)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
         view.message = await interaction.original_response()
+
+
+async def _get_rp_channel(bot, guild_id: int):
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT value FROM guild_config WHERE guild_id = %s AND config_key = 'rp_channel'",
+        (guild_id,)
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    db.close()
+    if row:
+        return bot.get_channel(int(row[0]))
+    return None

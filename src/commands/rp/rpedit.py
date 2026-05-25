@@ -1,150 +1,131 @@
 import discord
-from discord import Interaction, app_commands
+from discord import Interaction, Member, app_commands
+from discord.ui import Select, Modal, TextInput
 from src.utils.db import get_db_connection
 from src.utils.embed import set_bot_footer
 from src.utils.rp import has_rp_permission, invalidate_cache
+from src.utils.views import ExpiringView
 
 
 async def register(bot):
-    @bot.tree.command(name="rpedit", description="Modifier un personnage RP par son préfixe actuel")
-    @app_commands.describe(
-        prefix="Préfixe actuel du personnage",
-        name="Nouveau nom (optionnel)",
-        new_prefix="Nouveau préfixe (optionnel)",
-        image="Nouvelle image (fichier, optionnel)",
-    )
-    async def rpedit(
-        interaction: Interaction,
-        prefix: str,
-        name: str = None,
-        new_prefix: str = None,
-        image: discord.Attachment = None,
-    ):
+    @bot.tree.command(name="rpedit", description="Modifier un personnage RP (nom / préfixe)")
+    @app_commands.describe(user="Utilisateur propriétaire du personnage")
+    async def rpedit(interaction: Interaction, user: Member):
         if not has_rp_permission(interaction.user):
             embed = discord.Embed(title="❌ Permission refusée", color=discord.Color.red())
             set_bot_footer(embed, interaction)
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        if name is None and new_prefix is None and image is None:
-            embed = discord.Embed(
-                title="❌ Aucune modification",
-                description="Spécifie au moins un champ à modifier.",
-                color=discord.Color.red()
-            )
-            set_bot_footer(embed, interaction)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return
-
-        if image and (not image.content_type or not image.content_type.startswith("image/")):
-            embed = discord.Embed(
-                title="❌ Fichier invalide",
-                description="Le fichier joint doit être une image.",
-                color=discord.Color.red()
-            )
-            set_bot_footer(embed, interaction)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return
-
-        await interaction.response.defer(ephemeral=True)
-
         db = get_db_connection()
         cursor = db.cursor()
         cursor.execute(
-            "SELECT id, name FROM rp_characters WHERE guild_id = %s AND prefix = %s",
-            (interaction.guild.id, prefix.strip())
+            "SELECT id, name, prefix FROM rp_characters WHERE guild_id = %s AND user_id = %s ORDER BY created_at ASC",
+            (interaction.guild.id, user.id)
         )
-        row = cursor.fetchone()
+        rows = cursor.fetchall()
+        cursor.close()
+        db.close()
 
-        if not row:
-            cursor.close()
-            db.close()
+        if not rows:
             embed = discord.Embed(
-                title="❌ Personnage introuvable",
-                description=f"Aucun personnage avec le préfixe `{prefix}` sur ce serveur.",
+                title="❌ Aucun personnage",
+                description=f"{user.display_name} n'a aucun personnage sur ce serveur.",
                 color=discord.Color.red()
             )
             set_bot_footer(embed, interaction)
-            await interaction.edit_original_response(embed=embed)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        char_id, current_name = row
+        options = [
+            discord.SelectOption(label=name, value=str(char_id), description=f"Préfixe : {prefix}")
+            for char_id, name, prefix in rows
+        ]
+        select = Select(placeholder="Choisir un personnage...", options=options)
 
-        stable_url = None
-        if image:
-            rp_channel = await _get_rp_channel(bot, interaction.guild.id) or interaction.channel
-            file = await image.to_file()
-            msg = await rp_channel.send(
-                content=f"*Mise à jour de **{name or current_name}** :*",
-                file=file
-            )
-            stable_url = msg.attachments[0].url if msg.attachments else image.url
+        async def on_select(inter: Interaction):
+            char_id = int(select.values[0])
+            char = next((r for r in rows if r[0] == char_id), None)
+            if not char:
+                await inter.response.send_message("❌ Personnage introuvable.", ephemeral=True)
+                return
 
-        updates = []
-        values = []
-        if name:
-            updates.append("name = %s")
-            values.append(name)
-        if new_prefix:
-            updates.append("prefix = %s")
-            values.append(new_prefix.strip())
-        if stable_url:
-            updates.append("image_url = %s")
-            values.append(stable_url)
+            _, current_name, current_prefix = char
 
-        values.append(char_id)
-        try:
-            cursor.execute(
-                f"UPDATE rp_characters SET {', '.join(updates)} WHERE id = %s",
-                values
-            )
-            db.commit()
-        except Exception as e:
-            cursor.close()
-            db.close()
-            if "Duplicate" in str(e):
-                embed = discord.Embed(
-                    title="❌ Préfixe déjà utilisé",
-                    description=f"Le préfixe `{new_prefix}` est déjà pris sur ce serveur.",
-                    color=discord.Color.red()
+            class EditModal(Modal, title=f"Modifier {current_name}"):
+                new_name = TextInput(
+                    label="Nom",
+                    default=current_name,
+                    max_length=100,
                 )
-            else:
-                embed = discord.Embed(title="❌ Erreur", description=str(e), color=discord.Color.red())
-            set_bot_footer(embed, interaction)
-            await interaction.edit_original_response(embed=embed)
-            return
+                new_prefix = TextInput(
+                    label="Préfixe",
+                    default=current_prefix,
+                    max_length=20,
+                )
 
-        cursor.close()
-        db.close()
-        invalidate_cache(interaction.guild.id)
+                async def on_submit(self, modal_inter: Interaction):
+                    name_val = self.new_name.value.strip()
+                    prefix_val = self.new_prefix.value.strip()
 
-        changes = []
-        if name:
-            changes.append(f"Nom : **{current_name}** → **{name}**")
-        if new_prefix:
-            changes.append(f"Préfixe : `{prefix}` → `{new_prefix}`")
-        if image:
-            changes.append("Image mise à jour")
+                    updates = []
+                    values = []
+                    changes = []
+
+                    if name_val != current_name:
+                        updates.append("name = %s")
+                        values.append(name_val)
+                        changes.append(f"Nom : **{current_name}** → **{name_val}**")
+                    if prefix_val != current_prefix:
+                        updates.append("prefix = %s")
+                        values.append(prefix_val)
+                        changes.append(f"Préfixe : `{current_prefix}` → `{prefix_val}`")
+
+                    if not updates:
+                        await modal_inter.response.send_message(
+                            "Aucune modification détectée.", ephemeral=True
+                        )
+                        return
+
+                    values.append(char_id)
+                    db2 = get_db_connection()
+                    cursor2 = db2.cursor()
+                    try:
+                        cursor2.execute(
+                            f"UPDATE rp_characters SET {', '.join(updates)} WHERE id = %s",
+                            values
+                        )
+                        db2.commit()
+                    except Exception as e:
+                        cursor2.close()
+                        db2.close()
+                        msg = f"Le préfixe `{prefix_val}` est déjà pris." if "Duplicate" in str(e) else str(e)
+                        await modal_inter.response.send_message(f"❌ {msg}", ephemeral=True)
+                        return
+
+                    cursor2.close()
+                    db2.close()
+                    invalidate_cache(modal_inter.guild.id)
+
+                    embed = discord.Embed(
+                        title="✅ Personnage modifié",
+                        description="\n".join(changes),
+                        color=discord.Color.green()
+                    )
+                    set_bot_footer(embed, modal_inter)
+                    await modal_inter.response.send_message(embed=embed, ephemeral=True)
+
+            await inter.response.send_modal(EditModal())
+
+        select.callback = on_select
+        view = ExpiringView()
+        view.add_item(select)
 
         embed = discord.Embed(
-            title="✅ Personnage modifié",
-            description="\n".join(changes),
-            color=discord.Color.green()
+            title=f"🎭 Modifier un personnage de {user.display_name}",
+            description="Sélectionne le personnage à modifier.",
+            color=discord.Color.blurple()
         )
         set_bot_footer(embed, interaction)
-        await interaction.edit_original_response(embed=embed)
-
-
-async def _get_rp_channel(bot, guild_id: int):
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute(
-        "SELECT value FROM guild_config WHERE guild_id = %s AND config_key = 'rp_channel'",
-        (guild_id,)
-    )
-    row = cursor.fetchone()
-    cursor.close()
-    db.close()
-    if row:
-        return bot.get_channel(int(row[0]))
-    return None
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        view.message = await interaction.original_response()

@@ -29,9 +29,10 @@ _ADMIN = (
 )
 
 _RP = (
-    "`/rpcreate <user> <name> <prefix> <image_url>` — Créer un personnage RP\n"
-    "`/rpedit <prefix> [name] [new_prefix] [image]` — Modifier un personnage\n"
-    "`/rpdelete <prefix>` — Supprimer un personnage\n"
+    "`/rpcreate <user> <name> <prefix> <image>` — Créer un personnage RP\n"
+    "`/rpedit <user>` — Modifier nom ou préfixe (sélection + modal)\n"
+    "`/rpimage <user> <image>` — Changer l'image d'un personnage\n"
+    "`/rpdelete <user>` — Supprimer un personnage (sélection)\n"
     "`/rplist [user]` — Lister les personnages d'un utilisateur\n"
     "`/setrpchannel <channel>` — Définir le channel d'annonce RP"
 )
