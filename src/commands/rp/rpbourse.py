@@ -6,15 +6,17 @@ from src.utils.embed import set_bot_footer
 from src.utils.views import ExpiringView
 
 NAX_ICON = "src/assets/nax.png"
+# Remplace par l'emoji serveur une fois uploadé : "<:nax:ID_EMOJI>"
+NAX_EMOJI = "<:nax:1508570111437574254>"
 
 
 def _build_embed(char_name: str, balance: int, owner: discord.Member) -> discord.Embed:
+    formatted = f"{balance:,}".replace(",", " ")
     embed = discord.Embed(
         title=f"Bourse de {char_name}",
-        description=f"**{balance:,}**".replace(",", " "),
+        description=f"**{formatted} {NAX_EMOJI}**",
         color=discord.Color.from_rgb(230, 180, 150),
     )
-    embed.set_author(name="Nax", icon_url="attachment://nax.png")
     embed.set_footer(text=f"Personnage de {owner.display_name}")
     return embed
 
@@ -48,8 +50,7 @@ async def register(bot):
             char_id, char_name, balance = rows[0]
             embed = _build_embed(char_name, balance, target)
             set_bot_footer(embed, interaction)
-            file = discord.File(NAX_ICON, filename="nax.png")
-            await interaction.response.send_message(embed=embed, file=file)
+            await interaction.response.send_message(embed=embed)
             return
 
         # Multiple characters: dropdown
@@ -69,8 +70,7 @@ async def register(bot):
             _, char_name, balance = char
             embed = _build_embed(char_name, balance, target)
             set_bot_footer(embed, inter)
-            file = discord.File(NAX_ICON, filename="nax.png")
-            await inter.response.send_message(embed=embed, file=file)
+            await inter.response.send_message(embed=embed)
 
         select.callback = on_select
         view = ExpiringView()
