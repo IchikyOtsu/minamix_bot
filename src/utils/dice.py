@@ -486,12 +486,68 @@ def _roll_part(expr: str) -> str:
                 break
         return "\n".join(results)
 
+    # Multi-dice groups: "5d6+2d10" or "3d6-1d4+2"
+    groups = _split_dice_groups(expr)
+    if groups is not None:
+        return _roll_dice_groups(groups)
+
     # Alias expansion
     expanded = _expand_alias(expr)
     if expanded and expanded != expr:
         return _roll_single(expanded)
 
     return _roll_single(expr)
+
+
+def _split_dice_groups(expr: str):
+    """Split '5d6+2d10' into [('+','5d6'), ('+','2d10')]. Returns None if single group."""
+    tokens = re.split(r'(?=[+-]\d*d\d)', expr.strip())
+    if len(tokens) <= 1:
+        return None
+    groups = []
+    for token in tokens:
+        token = token.strip()
+        if not token:
+            continue
+        if token[0] in '+-':
+            groups.append((token[0], token[1:].strip()))
+        else:
+            groups.append(('+', token))
+    return groups if len(groups) > 1 else None
+
+
+def _roll_dice_groups(groups: list) -> str:
+    """Roll multiple dice groups and sum them."""
+    parts_display = []
+    label_parts = []
+    grand_total = 0
+
+    for sign, part in groups:
+        result_str = _roll_single(part)
+
+        # Extract numeric total
+        m = re.search(r'→ \*\*(-?\d+)\*\*', result_str)
+        val = int(m.group(1)) if m else 0
+        grand_total += val if sign == '+' else -val
+
+        # Extract dice block
+        m2 = re.search(r'`\[(.+?)\]`', result_str)
+        dice_block = f"`[{m2.group(1)}]`" if m2 else f"`[{val}]`"
+
+        # Extract label (XdY part)
+        m3 = re.match(r'🎲 (\S+)', result_str)
+        lbl = m3.group(1) if m3 else part
+
+        if parts_display:
+            parts_display.append(f"{sign} {dice_block}")
+            label_parts.append(f"{sign}{lbl}")
+        else:
+            parts_display.append(dice_block)
+            label_parts.append(lbl)
+
+    label = "".join(label_parts)
+    display = " ".join(parts_display)
+    return f"🎲 {label} {display} → **{grand_total}**"
 
 
 def get_help() -> str:
