@@ -536,11 +536,17 @@ def _roll_dice_groups(groups: list) -> str:
         m2 = re.search(r'`\[(.+?)\]`', result_str)
         dice_block = f"`[{m2.group(1)}]`" if m2 else f"`[{val}]`"
 
+        # Flat modifier at the end of the part (e.g. "+50" in "4d8+50")
+        mod_m = re.search(r'([+-]\d+)$', part)
+        mod_str = f" {mod_m.group(1)}" if mod_m else ""
+
+        block_with_mod = f"{dice_block}{mod_str}"
+
         if parts_display:
-            parts_display.append(f"{sign} {dice_block}")
+            parts_display.append(f"{sign} {block_with_mod}")
             label_parts.append(f"{sign}{part}")
         else:
-            parts_display.append(dice_block)
+            parts_display.append(block_with_mod)
             label_parts.append(part)
 
     label = "".join(label_parts)
