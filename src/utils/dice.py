@@ -443,6 +443,8 @@ def roll(expression: str) -> tuple[str, bool]:
 
 def _roll_part(expr: str) -> str:
     expr = expr.strip()
+    # Normalize spaces around + and - before dice patterns: "5d6 + 2d10" → "5d6+2d10"
+    expr = re.sub(r'\s*([+-])\s*(?=\d)', r'\1', expr)
     low = expr.lower()
 
     # Special systems
@@ -534,16 +536,12 @@ def _roll_dice_groups(groups: list) -> str:
         m2 = re.search(r'`\[(.+?)\]`', result_str)
         dice_block = f"`[{m2.group(1)}]`" if m2 else f"`[{val}]`"
 
-        # Extract label (XdY part)
-        m3 = re.match(r'🎲 (\S+)', result_str)
-        lbl = m3.group(1) if m3 else part
-
         if parts_display:
             parts_display.append(f"{sign} {dice_block}")
-            label_parts.append(f"{sign}{lbl}")
+            label_parts.append(f"{sign}{part}")
         else:
             parts_display.append(dice_block)
-            label_parts.append(lbl)
+            label_parts.append(part)
 
     label = "".join(label_parts)
     display = " ".join(parts_display)
